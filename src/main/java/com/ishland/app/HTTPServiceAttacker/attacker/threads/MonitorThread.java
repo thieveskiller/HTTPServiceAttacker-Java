@@ -60,7 +60,7 @@ public class MonitorThread extends Thread {
     }
 
     public void run() {
-	new Timer().schedule(logging, 0, 5000);
+	new Timer().schedule(logging, 0, 3000);
 	while (!isStopping) {
 	    CloseableHttpResponse result = null;
 	    try {

@@ -2,7 +2,10 @@ package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
 
+import org.apache.http.Header;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -11,8 +14,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 
 public class AttackerThread extends Thread {
 
@@ -28,6 +34,7 @@ public class AttackerThread extends Thread {
     private byte method = GET;
     private String data = null;
     private boolean showExceptions = true;
+    private String referer = "";
 
     public AttackerThread() {
 	super();
@@ -50,17 +57,23 @@ public class AttackerThread extends Thread {
 	    MonitorThread.newError();
 	    isReady = false;
 	}
+	List<Header> defaultHeaders = Arrays.asList(new BasicHeader("User-Agent",
+		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
+		new BasicHeader("Referer", this.referer));
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
 	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(4000).setSocketTimeout(4000)
 		.setConnectionRequestTimeout(8000).build();
-	CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
+	CloseableHttpClient httpClient = HttpClients.custom().setDefaultHeaders(defaultHeaders)
+		.setDefaultRequestConfig(defaultRequestConfig).build();
 	logger.info(this.getName() + " started.");
+	CloseableHttpResponse httpResponse = null;
+	System.out.println(Attack.replacePlaceHolders(this.target));
+	System.out.println(Attack.replacePlaceHolders(this.data));
 	while (!isStopping && isReady) {
-	    CloseableHttpResponse httpResponse = null;
 	    if (this.method == GET) {
 		HttpGet httpGetReq = null;
 		try {
-		    httpGetReq = new HttpGet(target);
+		    httpGetReq = new HttpGet(Attack.replacePlaceHolders(this.target));
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.fatal("Invaild target url", e);
@@ -90,8 +103,8 @@ public class AttackerThread extends Thread {
 	    } else if (this.method == POST) {
 		HttpPost httpPostReq = null;
 		try {
-		    httpPostReq = new HttpPost(target);
-		    httpPostReq.setEntity(new StringEntity(data));
+		    httpPostReq = new HttpPost(Attack.replacePlaceHolders(this.target));
+		    httpPostReq.setEntity(new StringEntity(Attack.replacePlaceHolders(this.data)));
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.fatal("Invaild target url", e);
@@ -151,6 +164,12 @@ public class AttackerThread extends Thread {
 		MonitorThread.newError();
 		continue;
 	    }
+	}
+	try {
+	    httpClient.close();
+	    if (httpResponse != null)
+		httpResponse.close();
+	} catch (IOException e) {
 	}
 	if (!isReady) {
 	    logger.fatal("Exiting due to configuration error");
@@ -225,6 +244,20 @@ public class AttackerThread extends Thread {
      */
     public void setShowExceptions(boolean showExceptions) {
 	this.showExceptions = showExceptions;
+    }
+
+    /**
+     * @return the referer
+     */
+    public String getReferer() {
+	return referer;
+    }
+
+    /**
+     * @param referer the referer to set
+     */
+    public void setReferer(String referer) {
+	this.referer = referer;
     }
 
 }
