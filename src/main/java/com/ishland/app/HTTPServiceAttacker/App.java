@@ -3,6 +3,7 @@ package com.ishland.app.HTTPServiceAttacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 import com.ishland.app.HTTPServiceAttacker.configuration.Configuration;
 
 public class App {
@@ -12,5 +13,25 @@ public class App {
     public static void main(String[] args) {
 	logger.info("Starting HTTP Service Attacker...");
 	config = new Configuration();
+	if (!config.isSuccess())
+	    System.exit(1);
+	logger.info("Initializing attackers...");
+	Attack.setConfig(config);
+	try {
+	    Attack.startAttack();
+	} catch (IllegalAccessException e) {
+	    logger.fatal("Failed to start attack", e);
+	    System.exit(2);
+	}
+	Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+	    public void run() {
+		App.shutdown();
+	    }
+	}));
+    }
+
+    public static void shutdown() {
+
+	Attack.stopAttack();
     }
 }
