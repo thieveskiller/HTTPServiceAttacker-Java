@@ -1,0 +1,7 @@
+showExceptions: true
+target:
+  - addr: https://google.com/
+    threads: 2
+    mode: GET
+    data: ''
+    Referer: ''
