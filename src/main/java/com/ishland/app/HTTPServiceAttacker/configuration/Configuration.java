@@ -55,7 +55,7 @@ public class Configuration {
 	try {
 	    configfile.createNewFile();
 	    out = new FileOutputStream(configfile);
-	    confin = Configuration.class.getResourceAsStream("config.yml");
+	    confin = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
 	} catch (IOException e) {
 	    logger.fatal("Unable to create configuration file!", e);
 	    return;
