@@ -2,6 +2,8 @@
 
 Development builds: https://ci.ishland.com/job/ThievesKiller/job/HTTPServiceAttacker-Java/job/master/
 
+Chinese document: https://github.com/thieveskiller/HTTPServiceAttacker-Java/README-CN.md
+
 # Usage
 - Download the build or build yourself
 - Launch the build using ``` java -jar yourbuild.jar ```
@@ -9,7 +11,7 @@ Development builds: https://ci.ishland.com/job/ThievesKiller/job/HTTPServiceAtta
 - Launch the build again
 - Enjoy
 
-# Configurarion
+# Configuration
 - showExceptions: Whether we show exception details
 - targets: A array where stores the targets
 - - addr: The remote url
