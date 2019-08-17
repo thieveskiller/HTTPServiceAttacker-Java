@@ -2,7 +2,7 @@
 
 Development builds: https://ci.ishland.com/job/ThievesKiller/job/HTTPServiceAttacker-Java/job/master/
 
-Chinese document: https://github.com/thieveskiller/HTTPServiceAttacker-Java/README-CN.md
+Chinese document: https://github.com/thieveskiller/HTTPServiceAttacker-Java/blob/master/README-CN.md
 
 # Usage
 - Download the build or build yourself
