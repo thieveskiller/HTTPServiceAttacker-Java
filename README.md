@@ -19,3 +19,12 @@ Chinese document: https://github.com/thieveskiller/HTTPServiceAttacker-Java/blob
 - - mode: Using ``` GET ``` or ``` POST ``` to do requests.
 - - data: When using ``` POST ```, the request body
 - - referer: The header ``` Referer ``` value to set
+
+# PlaceHolders
+- [QQ] QQ number
+- [86Phone] Chinese phone number
+- [Ascii_x] Random printable string, where ``` x ``` is the length
+- [Number_x] Random numerical string, where ``` x ``` is the length
+- [Alpha_x] Random alphabetical string, where ``` x ``` is the length
+- [NumAlp_x] Random alphabetical and numerical string, where ``` x ``` is the length
+- ``` x ``` is ranged in 1-32
