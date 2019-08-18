@@ -1,10 +1,16 @@
 package com.ishland.app.HTTPServiceAttacker.attacker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,6 +24,18 @@ public class Attack {
     private static ArrayList<AttackerThread> thrs = new ArrayList<>();
     private static MonitorThread monitorThread = null;
     private static final Logger logger = LogManager.getLogger("Attack manager");
+    private static PoolingHttpClientConnectionManager cm = null;
+    public static CloseableHttpClient httpClient = null;
+
+    public static void initClient(int threads) {
+	cm = new PoolingHttpClientConnectionManager(30, TimeUnit.SECONDS);
+	cm.setMaxTotal((int) (threads * 1.5));
+	cm.setValidateAfterInactivity(2000);
+	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(4000).setSocketTimeout(4000)
+		.setConnectionRequestTimeout(8000).build();
+	httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).setConnectionManager(cm)
+		.build();
+    }
 
     public static void startAttack() throws IllegalAccessException {
 	logger.info("Starting attack...");
@@ -25,6 +43,10 @@ public class Attack {
 	    throw new IllegalAccessException("Configuration is not set!");
 	monitorThread = new MonitorThread();
 	monitorThread.start();
+	int totalthreads = 0;
+	for (int i = 0; i < getConfig().getTarget().size(); i++)
+	    totalthreads += Integer.valueOf(String.valueOf(getConfig().getTarget().get(i).get("threads"))).intValue();
+	Attack.initClient(totalthreads);
 	Iterator<Map<String, Object>> itall = getConfig().getTarget().iterator();
 	while (itall.hasNext()) {
 	    Map<String, Object> itallmap = itall.next();
@@ -59,6 +81,11 @@ public class Attack {
 	    } catch (InterruptedException e) {
 		logger.warn("Could not wait for " + thr.getName() + " to die", e);
 	    }
+	}
+	try {
+	    httpClient.close();
+	    cm.close();
+	} catch (IOException e1) {
 	}
 	monitorThread.stopTask();
 	try {

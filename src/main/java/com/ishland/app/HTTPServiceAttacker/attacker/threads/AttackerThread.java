@@ -7,13 +7,10 @@ import java.util.List;
 
 import org.apache.http.Header;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,10 +58,6 @@ public class AttackerThread extends Thread {
 		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
 		new BasicHeader("Referer", this.referer));
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
-	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(4000).setSocketTimeout(4000)
-		.setConnectionRequestTimeout(8000).build();
-	CloseableHttpClient httpClient = HttpClients.custom().setDefaultHeaders(defaultHeaders)
-		.setDefaultRequestConfig(defaultRequestConfig).build();
 	logger.info(this.getName() + " started.");
 	CloseableHttpResponse httpResponse = null;
 	System.out.println(Attack.replacePlaceHolders(this.target));
@@ -74,6 +67,7 @@ public class AttackerThread extends Thread {
 		HttpGet httpGetReq = null;
 		try {
 		    httpGetReq = new HttpGet(Attack.replacePlaceHolders(this.target));
+		    httpGetReq.setHeaders((Header[]) defaultHeaders.toArray());
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.fatal("Invaild target url", e);
@@ -84,7 +78,7 @@ public class AttackerThread extends Thread {
 		    break;
 		}
 		try {
-		    httpResponse = httpClient.execute(httpGetReq);
+		    httpResponse = Attack.httpClient.execute(httpGetReq);
 		} catch (ClientProtocolException e) {
 		    if (showExceptions)
 			logger.fatal("Invaild http verson, aborting current request...", e);
@@ -123,7 +117,7 @@ public class AttackerThread extends Thread {
 		    break;
 		}
 		try {
-		    httpResponse = httpClient.execute(httpPostReq);
+		    httpResponse = Attack.httpClient.execute(httpPostReq);
 		} catch (ClientProtocolException e) {
 		    if (showExceptions)
 			logger.fatal("Invaild http verson, aborting current request...", e);
@@ -166,7 +160,6 @@ public class AttackerThread extends Thread {
 	    }
 	}
 	try {
-	    httpClient.close();
 	    if (httpResponse != null)
 		httpResponse.close();
 	} catch (IOException e) {
