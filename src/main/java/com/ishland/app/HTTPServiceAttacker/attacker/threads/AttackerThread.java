@@ -60,8 +60,8 @@ public class AttackerThread extends Thread {
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
 	logger.info(this.getName() + " started.");
 	CloseableHttpResponse httpResponse = null;
-	System.out.println(Attack.replacePlaceHolders(this.target));
-	System.out.println(Attack.replacePlaceHolders(this.data));
+	// System.out.println(Attack.replacePlaceHolders(this.target));
+	// System.out.println(Attack.replacePlaceHolders(this.data));
 	while (!isStopping && isReady) {
 	    if (this.method == GET) {
 		HttpGet httpGetReq = null;
@@ -73,6 +73,7 @@ public class AttackerThread extends Thread {
 			logger.fatal("Invaild target url", e);
 		    else
 			logger.fatal("Invaild target url");
+		    httpGetReq = null;
 		    MonitorThread.newError();
 		    isError = true;
 		    break;
@@ -85,12 +86,16 @@ public class AttackerThread extends Thread {
 		    else
 			logger.fatal("Invaild http verson, aborting current request...");
 		    MonitorThread.newError();
+		    httpGetReq = null;
+		    httpResponse = null;
 		    continue;
 		} catch (IOException e) {
 		    if (showExceptions)
 			logger.warn("I/O Error, aborting current request...", e);
 		    else
-			logger.warn("I/O Error, aborting current request...");
+			logger.warn("I/O Error: " + e.getMessage() + ", aborting current request...");
+		    httpGetReq = null;
+		    httpResponse = null;
 		    MonitorThread.newError();
 		    continue;
 		}
@@ -105,6 +110,7 @@ public class AttackerThread extends Thread {
 		    else
 			logger.fatal("Invaild target url");
 		    MonitorThread.newError();
+		    httpPostReq = null;
 		    isError = true;
 		    break;
 		} catch (UnsupportedEncodingException e) {
@@ -113,6 +119,7 @@ public class AttackerThread extends Thread {
 		    else
 			logger.fatal("Unsupported Encoding");
 		    MonitorThread.newError();
+		    httpPostReq = null;
 		    isError = true;
 		    break;
 		}
@@ -124,6 +131,8 @@ public class AttackerThread extends Thread {
 		    else
 			logger.fatal("Invaild http verson, aborting current request...");
 		    MonitorThread.newError();
+		    httpPostReq = null;
+		    httpResponse = null;
 		    continue;
 		} catch (IOException e) {
 		    if (showExceptions)
@@ -131,6 +140,8 @@ public class AttackerThread extends Thread {
 		    else
 			logger.warn("I/O Error, aborting current request...");
 		    MonitorThread.newError();
+		    httpPostReq = null;
+		    httpResponse = null;
 		    continue;
 		}
 	    }
@@ -142,6 +153,7 @@ public class AttackerThread extends Thread {
 		else
 		    logger.warn("Internal error");
 		MonitorThread.newError();
+		httpResponse = null;
 		continue;
 	    } catch (IllegalArgumentException e) {
 		if (showExceptions)
@@ -149,6 +161,7 @@ public class AttackerThread extends Thread {
 		else
 		    logger.warn("Internal error");
 		MonitorThread.newError();
+		httpResponse = null;
 		continue;
 	    } catch (InterruptedException e) {
 		if (showExceptions)
@@ -156,14 +169,11 @@ public class AttackerThread extends Thread {
 		else
 		    logger.warn("Internal error");
 		MonitorThread.newError();
+		httpResponse = null;
 		continue;
 	    }
 	}
-	try {
-	    if (httpResponse != null)
-		httpResponse.close();
-	} catch (IOException e) {
-	}
+	httpResponse = null;
 	if (!isReady) {
 	    logger.fatal("Exiting due to configuration error");
 	    return;

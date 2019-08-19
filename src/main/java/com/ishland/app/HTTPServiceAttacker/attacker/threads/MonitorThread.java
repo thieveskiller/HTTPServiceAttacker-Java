@@ -89,8 +89,10 @@ public class MonitorThread extends Thread {
 		result.close();
 	    } catch (IOException e) {
 	    }
+	    result = null;
 	}
 	logging.cancel();
+	logging = null;
     }
 
     /**

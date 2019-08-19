@@ -7,10 +7,17 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,11 +37,31 @@ public class Attack {
     public static void initClient(int threads) {
 	cm = new PoolingHttpClientConnectionManager(30, TimeUnit.SECONDS);
 	cm.setMaxTotal((int) (threads * 1.5));
+	cm.setDefaultMaxPerRoute(cm.getMaxTotal());
 	cm.setValidateAfterInactivity(2000);
+
 	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(4000).setSocketTimeout(4000)
 		.setConnectionRequestTimeout(8000).build();
-	httpClient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).setConnectionManager(cm)
-		.build();
+
+	ConnectionKeepAliveStrategy myStrategy = new ConnectionKeepAliveStrategy() {
+	    @Override
+	    public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+		HeaderElementIterator it = new BasicHeaderElementIterator(
+			response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+		while (it.hasNext()) {
+		    HeaderElement he = it.nextElement();
+		    String param = he.getName();
+		    String value = he.getValue();
+		    if (value != null && param.equalsIgnoreCase("timeout")) {
+			return Long.parseLong(value) * 1000;
+		    }
+		}
+		return 60 * 1000;// 如果没有约定，则默认定义时长为60s
+	    }
+	};
+
+	httpClient = HttpClients.custom().setKeepAliveStrategy(myStrategy).setDefaultRequestConfig(defaultRequestConfig)
+		.setConnectionManager(cm).build();
     }
 
     public static void startAttack() throws IllegalAccessException {
@@ -62,8 +89,11 @@ public class Attack {
 		thr.setReferer(String.valueOf(itallmap.get("referer")));
 		thr.start();
 		thrs.add(thr);
+		thr = null;
 	    }
+	    itallmap = null;
 	}
+	itall = null;
 	logger.info("Attack started.");
     }
 
@@ -72,6 +102,7 @@ public class Attack {
 	Iterator<AttackerThread> it = thrs.iterator();
 	while (it.hasNext())
 	    it.next().stopTask();
+	it = null;
 	logger.info("Waiting for all the threads to die...");
 	it = thrs.iterator();
 	while (it.hasNext()) {
@@ -81,18 +112,23 @@ public class Attack {
 	    } catch (InterruptedException e) {
 		logger.warn("Could not wait for " + thr.getName() + " to die", e);
 	    }
+	    thr = null;
 	}
+	it = null;
 	try {
 	    httpClient.close();
 	    cm.close();
 	} catch (IOException e1) {
 	}
+	httpClient = null;
+	cm = null;
 	monitorThread.stopTask();
 	try {
 	    monitorThread.join();
 	} catch (InterruptedException e) {
 	    logger.warn("Could not wait for Monitor Thread to die", e);
 	}
+	monitorThread = null;
 	logger.info("Attack stopped.");
     }
 
