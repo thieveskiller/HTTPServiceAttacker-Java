@@ -12,6 +12,7 @@ import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -59,9 +60,9 @@ public class Attack {
 		return 60 * 1000;// 如果没有约定，则默认定义时长为60s
 	    }
 	};
-
-	httpClient = HttpClients.custom().setKeepAliveStrategy(myStrategy).setDefaultRequestConfig(defaultRequestConfig)
-		.setConnectionManager(cm).build();
+	httpClient = HttpClients.custom().setConnectionReuseStrategy(new DefaultConnectionReuseStrategy())
+		.setKeepAliveStrategy(myStrategy).setDefaultRequestConfig(defaultRequestConfig).setConnectionManager(cm)
+		.build();
     }
 
     public static void startAttack() throws IllegalAccessException {

