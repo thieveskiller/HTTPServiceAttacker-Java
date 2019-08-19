@@ -35,13 +35,17 @@ public class MonitorThread extends Thread {
 	    logger.info("Total: "
 		    + String.valueOf(MonitorThread.successcount + MonitorThread.failurecount + MonitorThread.errored));
 	    logger.info("Success info: " + success.toString());
-	    logger.info("Failure info: " + failure.toString());
-	    logger.info("Thrown exceptions count: " + errored);
+	    logger.info("Failure info: " + failure.toString() + " + " + errored + " exceptions");
 	    logger.info("RPS: "
 		    + String.valueOf(
 			    (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0))
 		    + "/"
 		    + String.valueOf((float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0)));
+	    logger.info("RPM: "
+		    + String.valueOf(
+			    (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0) * 60.0)
+		    + "/" + String.valueOf(
+			    (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0) * 60.0));
 	    timeReqs = 0;
 	    timeReqsNoFail = 0;
 	    timeEl = System.currentTimeMillis();
