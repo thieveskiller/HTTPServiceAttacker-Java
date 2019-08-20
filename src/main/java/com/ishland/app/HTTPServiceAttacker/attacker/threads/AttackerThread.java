@@ -176,10 +176,10 @@ public class AttackerThread extends Thread {
 	    try {
 		EntityUtils.consume(httpResponse.getEntity());
 	    } catch (Throwable e) {
-		if (showExceptions)
-		    logger.warn("Error while consuming entity", e);
-		else
-		    logger.warn("Error while consuming entity");
+		// if (showExceptions)
+		// logger.warn("Error while consuming entity", e);
+		// else
+		// logger.warn("Error while consuming entity");
 	    }
 	}
 	httpResponse = null;

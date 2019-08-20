@@ -17,21 +17,23 @@ public class App {
 	    System.exit(1);
 	logger.info("Initializing attackers...");
 	Attack.setConfig(config);
+	Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+	    public void run() {
+		App.shutdown();
+	    }
+	}));
+	// WebServer.run();
 	try {
 	    Attack.startAttack();
 	} catch (IllegalAccessException e) {
 	    logger.fatal("Failed to start attack", e);
 	    System.exit(2);
 	}
-	Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-	    public void run() {
-		App.shutdown();
-	    }
-	}));
     }
 
     public static void shutdown() {
-
 	Attack.stopAttack();
+	// WebServer.stop();
+	System.exit(0);
     }
 }

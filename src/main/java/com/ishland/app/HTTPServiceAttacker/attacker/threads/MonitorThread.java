@@ -2,7 +2,9 @@ package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -12,6 +14,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.websocket.api.Session;
+
+import com.ishland.app.HTTPServiceAttacker.manager.webserver.WSConnection;
 
 public class MonitorThread extends Thread {
 
@@ -32,23 +37,22 @@ public class MonitorThread extends Thread {
 
 	@Override
 	public void run() {
+	    double vaildRPS = (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
+	    double totalRPS = (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
 	    logger.info("Total: "
 		    + String.valueOf(MonitorThread.successcount + MonitorThread.failurecount + MonitorThread.errored));
 	    logger.info("Success info: " + success.toString());
 	    logger.info("Failure info: " + failure.toString() + " + " + errored + " exceptions");
-	    logger.info("RPS: "
-		    + String.valueOf(
-			    (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0))
-		    + "/"
-		    + String.valueOf((float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0)));
-	    logger.info("RPM: "
-		    + String.valueOf(
-			    (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0) * 60.0)
-		    + "/" + String.valueOf(
-			    (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0) * 60.0));
+	    logger.info("RPS: " + String.valueOf(vaildRPS) + "/" + String.valueOf(totalRPS));
+	    logger.info("RPM: " + String.valueOf(vaildRPS * 60) + "/" + String.valueOf(totalRPS * 60));
 	    timeReqs = 0;
 	    timeReqsNoFail = 0;
 	    timeEl = System.currentTimeMillis();
+	    Iterator<Entry<Integer, Session>> it = WSConnection.sessions.entrySet().iterator();
+	    while (it.hasNext()) {
+		Entry<Integer, Session> entry = it.next();
+		entry.getValue().getRemote().sendStringByFuture("");
+	    }
 	}
 
     };
@@ -64,7 +68,7 @@ public class MonitorThread extends Thread {
     }
 
     public void run() {
-	new Timer().schedule(logging, 0, 3000);
+	new Timer().scheduleAtFixedRate(logging, 0, 1000);
 	while (!isStopping) {
 	    CloseableHttpResponse result = null;
 	    try {

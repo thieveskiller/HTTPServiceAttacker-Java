@@ -137,6 +137,7 @@ public class Attack {
 	String result = new String(origin);
 	result = result.replaceAll("\\[QQ\\]", RandomStringUtils.randomNumeric(5, 10));
 	result = result.replaceAll("\\[86Phone\\]", "1" + RandomStringUtils.randomNumeric(10));
+	result = result.replaceAll("\\[time_sec\\]", String.valueOf((long) System.currentTimeMillis() / 1000));
 	for (int i = 1; i <= 32; i++) {
 	    result = result.replaceAll("\\[Ascii_" + String.valueOf(i) + "\\]", RandomStringUtils.randomAscii(i));
 	    result = result.replaceAll("\\[Number_" + String.valueOf(i) + "\\]", RandomStringUtils.randomNumeric(i));
