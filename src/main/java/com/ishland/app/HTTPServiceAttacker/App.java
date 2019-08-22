@@ -20,7 +20,13 @@ public class App {
 	Attack.setConfig(config);
 	Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 	    public void run() {
-		App.shutdown();
+		App.shutdown(true);
+		try {
+		    Thread.sleep(10 * 1000);
+		} catch (InterruptedException e) {
+		}
+		logger.fatal("Cannot shutdown JVM normally, the JVM is shutting down forcibly.");
+		Runtime.getRuntime().halt(0);
 	    }
 	}));
 	WebServer.run();
@@ -32,9 +38,10 @@ public class App {
 	}
     }
 
-    public static void shutdown() {
+    public static void shutdown(boolean isInShutdownHook) {
 	Attack.stopAttack();
 	WebServer.stop();
-	System.exit(0);
+	if (!isInShutdownHook)
+	    System.exit(0);
     }
 }
