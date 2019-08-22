@@ -116,18 +116,21 @@ public class Attack {
 	    thr = null;
 	}
 	it = null;
-	try {
-	    httpClient.close();
-	    cm.close();
-	} catch (IOException e1) {
-	}
+	if (httpClient != null)
+	    try {
+		httpClient.close();
+		cm.close();
+	    } catch (IOException e1) {
+	    }
 	httpClient = null;
 	cm = null;
-	monitorThread.stopTask();
-	try {
-	    monitorThread.join();
-	} catch (InterruptedException e) {
-	    logger.warn("Could not wait for Monitor Thread to die", e);
+	if (monitorThread != null) {
+	    monitorThread.stopTask();
+	    try {
+		monitorThread.join();
+	    } catch (InterruptedException e) {
+		logger.warn("Could not wait for Monitor Thread to die", e);
+	    }
 	}
 	monitorThread = null;
 	logger.info("Attack stopped.");

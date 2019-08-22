@@ -3,3 +3,4 @@
 .project
 .settings
 /config.yml
+/src/main/resources/web/node_modules/

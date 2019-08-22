@@ -25,8 +25,8 @@ public class WSConnection {
 		session.close(503, null);
 		return;
 	    }
-	    session.getRemote().sendStringByFuture("{\"code\":0}");
 	}
+	sessions.put(session.hashCode(), session);
     }
 
     @OnWebSocketClose

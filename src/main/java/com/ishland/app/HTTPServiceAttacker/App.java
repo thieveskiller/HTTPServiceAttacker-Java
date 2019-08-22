@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 import com.ishland.app.HTTPServiceAttacker.configuration.Configuration;
+import com.ishland.app.HTTPServiceAttacker.manager.webserver.WebServer;
 
 public class App {
     private static final Logger logger = LogManager.getLogger("Launcher");
@@ -22,7 +23,7 @@ public class App {
 		App.shutdown();
 	    }
 	}));
-	// WebServer.run();
+	WebServer.run();
 	try {
 	    Attack.startAttack();
 	} catch (IllegalAccessException e) {
@@ -33,7 +34,7 @@ public class App {
 
     public static void shutdown() {
 	Attack.stopAttack();
-	// WebServer.stop();
+	WebServer.stop();
 	System.exit(0);
     }
 }
