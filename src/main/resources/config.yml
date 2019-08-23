@@ -1,7 +1,7 @@
-showExceptions: true
+showExceptions: false
 target:
-  - addr: https://google.com/
-    threads: 2
+  - addr: https://csdn.net/
+    threads: 1
     mode: GET
     data: ''
     Referer: ''

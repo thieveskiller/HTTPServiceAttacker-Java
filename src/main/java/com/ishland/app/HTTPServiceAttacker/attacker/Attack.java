@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.HeaderElement;
@@ -13,10 +12,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
+import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.nio.reactor.ConnectingIOReactor;
+import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.logging.log4j.LogManager;
@@ -32,17 +34,23 @@ public class Attack {
     private static ArrayList<AttackerThread> thrs = new ArrayList<>();
     private static MonitorThread monitorThread = null;
     private static final Logger logger = LogManager.getLogger("Attack manager");
-    private static PoolingHttpClientConnectionManager cm = null;
-    public static CloseableHttpClient httpClient = null;
+    private static ConnectingIOReactor ioReactor = null;
+    private static PoolingNHttpClientConnectionManager cm = null;
+    public static CloseableHttpAsyncClient httpClient = null;
 
     public static void initClient(int threads) {
-	cm = new PoolingHttpClientConnectionManager(30, TimeUnit.SECONDS);
-	cm.setMaxTotal((int) (threads * 1.5));
-	cm.setDefaultMaxPerRoute(cm.getMaxTotal());
-	cm.setValidateAfterInactivity(2000);
-
-	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(4000).setSocketTimeout(4000)
-		.setConnectionRequestTimeout(8000).build();
+	try {
+	    ioReactor = new DefaultConnectingIOReactor();
+	} catch (IOReactorException e) {
+	    logger.fatal("Unable to start IOReactor", e);
+	    System.exit(1);
+	    return;
+	}
+	cm = new PoolingNHttpClientConnectionManager(ioReactor);
+	cm.setMaxTotal(threads * 4096);
+	cm.setDefaultMaxPerRoute(threads * 4096);
+	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(30000).setSocketTimeout(30000)
+		.setConnectionRequestTimeout(30000).build();
 
 	ConnectionKeepAliveStrategy myStrategy = new ConnectionKeepAliveStrategy() {
 	    @Override
@@ -60,9 +68,10 @@ public class Attack {
 		return 60 * 1000;// 如果没有约定，则默认定义时长为60s
 	    }
 	};
-	httpClient = HttpClients.custom().setConnectionReuseStrategy(new DefaultConnectionReuseStrategy())
+	httpClient = HttpAsyncClients.custom().setConnectionReuseStrategy(new DefaultConnectionReuseStrategy())
 		.setKeepAliveStrategy(myStrategy).setDefaultRequestConfig(defaultRequestConfig).setConnectionManager(cm)
 		.build();
+	httpClient.start();
     }
 
     public static void startAttack() throws IllegalAccessException {
@@ -116,13 +125,23 @@ public class Attack {
 	    thr = null;
 	}
 	it = null;
+	if (ioReactor != null)
+	    try {
+		ioReactor.shutdown();
+	    } catch (IOException e2) {
+	    }
+	ioReactor = null;
 	if (httpClient != null)
 	    try {
 		httpClient.close();
-		cm.close();
 	    } catch (IOException e1) {
 	    }
 	httpClient = null;
+	if (cm != null)
+	    try {
+		cm.shutdown();
+	    } catch (IOException e1) {
+	    }
 	cm = null;
 	if (monitorThread != null) {
 	    monitorThread.stopTask();

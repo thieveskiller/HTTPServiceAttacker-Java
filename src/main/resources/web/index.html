@@ -16,9 +16,10 @@
         <p id="status"></p>
     </div>
     <div class="body">
-        <div id="gauge-1" class="gauge" style="margin: 0px;float: left;"></div>
-        <div id="gauge-2" class="gauge"></div>
-        <div id="gauge-3" class="gauge" style="margin: 0px;float: right;"></div>
+        <div id="gauge-1" class="gauge" style="margin: 0px;float: left;width: 25%;"></div>
+        <div id="gauge-2" class="gauge" style="margin: 0px;float: left;width: 25%;"></div>
+        <div id="creation_speed" class="gauge" style="margin: 0px;float: right;width: 25%;"></div>
+        <div id="gauge-3" class="gauge" style="margin: 0px;float: right;width: 25%;"></div>
         <div id="line-1" class="line"></div>
         <div id="line-2" class="line"></div>
     </div>
@@ -27,6 +28,8 @@
             .location.port ? "" : (":" + window.location.port)) + "/ws");
     </script>
     <script src="js/echarts.js"></script>
+    <script src="js/highcharts.js"></script>
+    <script src="js/highcharts-custom.src.js"></script>
     <script src="js/main.js"></script>
 </body>
 

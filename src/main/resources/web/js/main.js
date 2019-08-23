@@ -20,10 +20,9 @@ var line_net_out = [];
 
 window.onload = function () {
     charts.gauge_1 = echarts.init(document.getElementById("gauge-1"));
+    charts.creation_speed = echarts.init(document.getElementById("creation_speed"));
     charts.gauge_2 = echarts.init(document.getElementById("gauge-2"));
     charts.gauge_3 = echarts.init(document.getElementById("gauge-3"));
-    charts.line_1 = echarts.init(document.getElementById("line-1"));
-    charts.line_2 = echarts.init(document.getElementById("line-2"));
     draw();
 }
 
@@ -35,8 +34,11 @@ ws.onclose = function () {
 };
 ws.onerror = function () {
     ws = new WebSocket(wsaddr);
-}
+};
+var isReceived = false;
+
 ws.addEventListener('message', function (event) {
+    isReceived = true;
     var data = JSON.parse(event.data);
     // 仪表盘 内存使用
     var option = {
@@ -53,6 +55,22 @@ ws.addEventListener('message', function (event) {
         }]
     };
     charts.gauge_1.setOption(option, true);
+
+    // 仪表盘 连接创建
+    var option = {
+        series: [{
+            type: 'gauge',
+            max: data.maxCreationSpeed.toFixed(0),
+            detail: {
+                formatter: '{value}/s'
+            },
+            data: [{
+                value: data.creationSpeed.toFixed(0),
+                name: '连接创建'
+            }]
+        }]
+    };
+    charts.creation_speed.setOption(option, true);
 
     // 仪表盘 当前并发
     option = {
@@ -93,7 +111,27 @@ ws.addEventListener('message', function (event) {
         }]
     };
     charts.gauge_3.setOption(option, true);
+
+    line_data_success.push(data.vaildRPS);
+    line_data_fail.push(data.totalRPS - data.vaildRPS);
+
+    if (line_data_time.length > 60) {
+        line_data_success.shift();
+        line_data_fail.shift();
+        line_data_time.shift();
+    }
+
+    charts.line_1.render();
+
+
 });
+
+setTimeout(function () {
+    if (!isReceived)
+        setInterval(function () {
+            ws.send("ping");
+        }, 500);
+}, 5000);
 
 function draw() {
     // 仪表盘 内存使用
@@ -115,6 +153,25 @@ function draw() {
         }]
     };
     charts.gauge_1.setOption(option, true);
+    // 仪表盘 创建速度
+    var option = {
+        tooltip: {
+            formatter: "{a} <br/>{b} : {c}/s"
+        },
+        series: [{
+            name: '业务指标',
+            type: 'gauge',
+            max: 5000,
+            detail: {
+                formatter: '{value}/s'
+            },
+            data: [{
+                value: 0,
+                name: '创建速度'
+            }]
+        }]
+    };
+    charts.creation_speed.setOption(option, true);
     // 仪表盘 当前并发
     option = {
         tooltip: {
@@ -155,104 +212,49 @@ function draw() {
     };
     charts.gauge_3.setOption(option, true);
 
-    // 图表 请求数
-    option = {
+    charts.line_1 = Highcharts.chart('line-1', {
+        chart: {
+            type: 'area'
+        },
         title: {
             text: '请求统计'
         },
-        tooltip: {
-            trigger: 'axis'
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-        },
-        legend: {
-            data: ['total', 'success', 'fail']
+        time: {
+            useUTC: false
         },
         xAxis: {
-            type: 'category',
-            boundaryGap: false,
-            data: line_data_time
+            type: 'datetime',
+            tickmarkPlacement: 'on',
+            title: {
+                enabled: false
+            }
         },
         yAxis: {
-            type: 'value'
-        },
-        series: [{
-            name: 'total',
-            type: 'line',
-            stack: '总量',
-            smooth: true,
-            data: line_data_total,
-            areaStyle: {}
-        }, {
-            name: 'success',
-            type: 'line',
-            stack: '总量',
-            smooth: true,
-            data: line_data_success,
-            areaStyle: {}
-        }, {
-            name: 'fail',
-            type: 'line',
-            stack: '总量',
-            smooth: true,
-            data: line_data_fail,
-            areaStyle: {}
-        }]
-    };
-
-    charts.line_1.setOption(option, true);
-
-    // 图表 流量
-    option = {
-        title: {
-            text: '流量统计'
+            title: {
+                text: 'Requests'
+            }
         },
         tooltip: {
-            trigger: 'axis'
+            split: true,
+            valueSuffix: ''
         },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-        },
-        legend: {
-            data: ['in', 'out']
-        },
-        xAxis: {
-            type: 'category',
-            boundaryGap: false,
-            data: line_data_time
-        },
-        yAxis: {
-            type: 'value'
+        plotOptions: {
+            area: {
+                stacking: 'normal',
+                lineColor: '#666666',
+                lineWidth: 1,
+                marker: {
+                    lineWidth: 1,
+                    lineColor: '#666666'
+                }
+            }
         },
         series: [{
-            name: 'in',
-            type: 'line',
-            stack: '总量',
-            smooth: true,
-            data: line_net_in,
-            areaStyle: {}
+            name: 'Success',
+            data: line_data_success
         }, {
-            name: 'out',
-            type: 'line',
-            stack: '总量',
-            smooth: true,
-            data: line_net_out,
-            areaStyle: {}
+            name: 'Failed',
+            data: line_data_fail
         }]
-    };
-
-    charts.line_2.setOption(option, true);
-}
-
-ws.onmessage = function (event) {
-    var json = JSON.parse(event.data);
-    // Speed
-
+    });
 }
