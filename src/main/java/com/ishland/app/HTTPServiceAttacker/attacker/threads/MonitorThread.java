@@ -94,8 +94,9 @@ public class MonitorThread extends Thread {
 
     public void run() {
 	GsonBuilder gsona = new GsonBuilder();
+	gsona.serializeSpecialFloatingPointValues();
 	gson = gsona.create();
-	new Timer().scheduleAtFixedRate(logging, 0, 500);
+	new Timer().schedule(logging, 0, 500);
 	while (!isStopping) {
 	    HttpResponse result = null;
 	    try {
