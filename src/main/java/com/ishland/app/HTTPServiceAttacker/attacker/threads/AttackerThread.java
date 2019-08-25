@@ -23,6 +23,7 @@ public class AttackerThread extends Thread {
     public static final byte POST = 0x01;
 
     private static int num = 0;
+    public static Long openedCount = 0L;
 
     private Logger logger = null;
 
@@ -32,6 +33,82 @@ public class AttackerThread extends Thread {
     private String data = null;
     private boolean showExceptions = true;
     private String referer = "";
+    private long startedCount = 0;
+
+    private FutureCallback<HttpResponse> callback = new FutureCallback<HttpResponse>() {
+
+	@Override
+	public void completed(HttpResponse httpResponse) {
+	    synchronized (this) {
+		this.notifyAll();
+	    }
+	    synchronized (openedCount) {
+		openedCount--;
+	    }
+	    startedCount--;
+	    try {
+		MonitorThread.pushResult(httpResponse);
+	    } catch (NullPointerException e) {
+		if (showExceptions)
+		    logger.warn("Internal error", e);
+		else
+		    logger.warn("Internal error");
+		MonitorThread.newError();
+		httpResponse = null;
+	    } catch (IllegalArgumentException e) {
+		if (showExceptions)
+		    logger.warn("Internal error", e);
+		else
+		    logger.warn("Internal error");
+		MonitorThread.newError();
+		httpResponse = null;
+	    } catch (InterruptedException e) {
+		if (showExceptions)
+		    logger.warn("Internal error", e);
+		else
+		    logger.warn("Internal error");
+		MonitorThread.newError();
+		httpResponse = null;
+	    }
+	    try {
+		EntityUtils.consume(httpResponse.getEntity());
+	    } catch (Throwable e) {
+		// if (showExceptions)
+		// logger.warn("Error while consuming entity", e);
+		// else
+		// logger.warn("Error while consuming entity");
+	    }
+	}
+
+	@Override
+	public void failed(Exception ex) {
+	    synchronized (this) {
+		this.notifyAll();
+	    }
+	    synchronized (openedCount) {
+		openedCount--;
+	    }
+	    startedCount--;
+	    if (showExceptions)
+		logger.warn("Error while making request", ex);
+	    else
+		logger.warn("Error while making request: " + ex.getMessage());
+	    MonitorThread.newError();
+	}
+
+	@Override
+	public void cancelled() {
+	    synchronized (this) {
+		this.notifyAll();
+	    }
+	    synchronized (openedCount) {
+		openedCount--;
+	    }
+	    startedCount--;
+	    logger.info("Cancelled");
+	}
+
+    };
 
     public AttackerThread() {
 	super();
@@ -61,60 +138,23 @@ public class AttackerThread extends Thread {
 	logger.info(this.getName() + " started.");
 	// System.out.println(Attack.replacePlaceHolders(this.target));
 	// System.out.println(Attack.replacePlaceHolders(this.data));
-	FutureCallback<HttpResponse> callback = new FutureCallback<HttpResponse>() {
 
-	    @Override
-	    public void completed(HttpResponse httpResponse) {
-		try {
-		    MonitorThread.pushResult(httpResponse);
-		} catch (NullPointerException e) {
-		    if (showExceptions)
-			logger.warn("Internal error", e);
-		    else
-			logger.warn("Internal error");
-		    MonitorThread.newError();
-		    httpResponse = null;
-		} catch (IllegalArgumentException e) {
-		    if (showExceptions)
-			logger.warn("Internal error", e);
-		    else
-			logger.warn("Internal error");
-		    MonitorThread.newError();
-		    httpResponse = null;
-		} catch (InterruptedException e) {
-		    if (showExceptions)
-			logger.warn("Internal error", e);
-		    else
-			logger.warn("Internal error");
-		    MonitorThread.newError();
-		    httpResponse = null;
-		}
-		try {
-		    EntityUtils.consume(httpResponse.getEntity());
-		} catch (Throwable e) {
-		    // if (showExceptions)
-		    // logger.warn("Error while consuming entity", e);
-		    // else
-		    // logger.warn("Error while consuming entity");
-		}
-	    }
-
-	    @Override
-	    public void failed(Exception ex) {
-		if (showExceptions)
-		    logger.warn("Error while making request", ex);
-		else
-		    logger.warn("Error while making request: " + ex.getMessage());
-		MonitorThread.newError();
-	    }
-
-	    @Override
-	    public void cancelled() {
-		logger.info("Cancelled");
-	    }
-
-	};
 	while (!isStopping && isReady) {
+	    if (startedCount > 4096) {
+		synchronized (callback) {
+		    logger.info("Opened connection above threshold, sleeping");
+		    try {
+			callback.wait();
+		    } catch (InterruptedException e) {
+		    }
+		    logger.info("Continuing");
+		    continue;
+		}
+	    }
+	    synchronized (openedCount) {
+		openedCount++;
+	    }
+	    startedCount++;
 	    MonitorThread.newCreation();
 	    if (this.method == GET) {
 		HttpGet httpGetReq = null;
@@ -183,6 +223,9 @@ public class AttackerThread extends Thread {
      * @param isStopping the isStopping to set
      */
     public void stopTask() {
+	synchronized (callback) {
+	    callback.notifyAll();
+	}
 	this.isStopping = true;
     }
 

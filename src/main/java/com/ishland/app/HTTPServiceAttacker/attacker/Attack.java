@@ -31,7 +31,7 @@ import com.ishland.app.HTTPServiceAttacker.configuration.Configuration;
 public class Attack {
 
     private static Configuration config = null;
-    private static ArrayList<AttackerThread> thrs = new ArrayList<>();
+    public static ArrayList<AttackerThread> thrs = new ArrayList<>();
     private static MonitorThread monitorThread = null;
     private static final Logger logger = LogManager.getLogger("Attack manager");
     private static ConnectingIOReactor ioReactor = null;
@@ -151,6 +151,11 @@ public class Attack {
 		logger.warn("Could not wait for Monitor Thread to die", e);
 	    }
 	}
+	try {
+	    Thread.sleep(100);
+	} catch (InterruptedException e) {
+	}
+	MonitorThread.logging.run();
 	monitorThread = null;
 	logger.info("Attack stopped.");
     }

@@ -15,6 +15,8 @@ public class WSContent {
     public Double maxTotalRPS = 0.0;
     public Long creationSpeed = 0L;
     public Long maxCreationSpeed = 0L;
+    public Long createdConnections = 0L;
+    public Long maxAllowedConnections = 0L;
     public Long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
     public Long freeHeap = Runtime.getRuntime().freeMemory();
     public Long allocatedHeap = Runtime.getRuntime().totalMemory();

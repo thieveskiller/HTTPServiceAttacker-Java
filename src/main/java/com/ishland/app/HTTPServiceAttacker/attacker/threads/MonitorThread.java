@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 import com.ishland.app.HTTPServiceAttacker.manager.WSContent;
 import com.ishland.app.HTTPServiceAttacker.manager.webserver.WSConnection;
 
@@ -35,7 +36,7 @@ public class MonitorThread extends Thread {
     private static long timeEl = 0;
     private static long timeCre = 0;
 
-    private static TimerTask logging = new TimerTask() {
+    public static TimerTask logging = new TimerTask() {
 	private final Logger logger = LogManager.getLogger("Monitor Timer");
 
 	@Override
@@ -56,6 +57,7 @@ public class MonitorThread extends Thread {
 	    wsContent.allocatedHeap = Runtime.getRuntime().totalMemory();
 	    wsContent.freeHeap = wsContent.allocatedHeap.longValue() - wsContent.freeHeap.longValue();
 	    wsContent.maxHeap = Runtime.getRuntime().maxMemory();
+	    wsContent.createdConnections = AttackerThread.openedCount;
 
 	    logger.info("Total: " + String.valueOf(wsContent.successcount.longValue()
 		    + wsContent.failurecount.longValue() + wsContent.errored.longValue()));
@@ -64,6 +66,9 @@ public class MonitorThread extends Thread {
 	    logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
 	    logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
 		    + String.valueOf(wsContent.totalRPS.longValue() * 60));
+	    logger.info("Created connections: " + String.valueOf(wsContent.createdConnections) + "/"
+		    + String.valueOf(wsContent.maxAllowedConnections));
+	    logger.info("--------------------------------");
 	    timeReqs = 0;
 	    timeReqsNoFail = 0;
 	    timeEl = System.currentTimeMillis();
@@ -97,6 +102,11 @@ public class MonitorThread extends Thread {
 	gsona.serializeSpecialFloatingPointValues();
 	gson = gsona.create();
 	new Timer().schedule(logging, 0, 500);
+	int totalthreads = 0;
+	for (int i = 0; i < Attack.getConfig().getTarget().size(); i++)
+	    totalthreads += Integer.valueOf(String.valueOf(Attack.getConfig().getTarget().get(i).get("threads")))
+		    .intValue();
+	wsContent.maxAllowedConnections = (long) (totalthreads * 4096);
 	while (!isStopping) {
 	    HttpResponse result = null;
 	    try {
@@ -124,7 +134,7 @@ public class MonitorThread extends Thread {
 	    result = null;
 	}
 	logging.cancel();
-	logging = null;
+	// logging = null;
     }
 
     /**
