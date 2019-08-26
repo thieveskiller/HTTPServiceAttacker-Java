@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.annotation.NonNull;
 import org.yaml.snakeyaml.Yaml;
 
 public class Configuration {
@@ -19,6 +20,36 @@ public class Configuration {
     private ArrayList<Map<String, Object>> target = null;
     private boolean showExceptions = false;
     private boolean isSuccess = true;
+
+    public Configuration(@NonNull File config) {
+	this.configfile = config;
+	logger.info("Loading configurations...");
+	FileReader reader = null;
+	try {
+	    logger.debug("Preparing configuration file stream...");
+	    reader = new FileReader(configfile);
+	} catch (FileNotFoundException e) {
+	    logger.fatal("Unable to load configuration file, creating one and exit...", e);
+	    createFile();
+	    setSuccess(false);
+	    return;
+	}
+	try {
+	    logger.debug("Parsing YAML root...");
+	    @SuppressWarnings("unchecked")
+	    Map<String, Object> conf = (Map<String, Object>) new Yaml().load(reader);
+	    setShowExceptions((boolean) conf.get("showExceptions"));
+	    logger.debug("Parsing YAML root.target...");
+	    @SuppressWarnings("unchecked")
+	    ArrayList<Map<String, Object>> targeta = (ArrayList<Map<String, Object>>) conf.get("target");
+	    setTarget(targeta);
+	    logger.debug(target);
+	} catch (ClassCastException e) {
+	    logger.fatal("Invaild configuration file!", e);
+	    setSuccess(false);
+	    return;
+	}
+    }
 
     public Configuration() {
 	logger.info("Loading configurations...");
