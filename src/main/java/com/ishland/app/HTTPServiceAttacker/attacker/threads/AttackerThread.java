@@ -12,8 +12,8 @@ import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 
@@ -113,7 +113,7 @@ public class AttackerThread extends Thread {
     public AttackerThread() {
 	super();
 	num++;
-	logger = LogManager.getLogger("Attacker Thread - " + String.valueOf(num));
+	logger = LoggerFactory.getLogger("Attacker Thread - " + String.valueOf(num));
 	this.setName("Attacker Thread - " + String.valueOf(num));
     }
 
@@ -122,12 +122,12 @@ public class AttackerThread extends Thread {
 	boolean isReady = true;
 	boolean isError = false;
 	if (target == null) {
-	    logger.fatal("Target must not be null");
+	    logger.error("Target must not be null");
 	    MonitorThread.newError();
 	    isReady = false;
 	}
 	if (method == POST && data == null) {
-	    logger.fatal("You must set the data in POST mode");
+	    logger.error("You must set the data in POST mode");
 	    MonitorThread.newError();
 	    isReady = false;
 	}
@@ -163,9 +163,9 @@ public class AttackerThread extends Thread {
 		    httpGetReq.setHeaders((Header[]) defaultHeaders.toArray());
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
-			logger.fatal("Invaild target url", e);
+			logger.error("Invaild target url", e);
 		    else
-			logger.fatal("Invaild target url");
+			logger.error("Invaild target url");
 		    httpGetReq = null;
 		    MonitorThread.newError();
 		    isError = true;
@@ -179,18 +179,18 @@ public class AttackerThread extends Thread {
 		    httpPostReq.setEntity(new StringEntity(Attack.replacePlaceHolders(this.data)));
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
-			logger.fatal("Invaild target url", e);
+			logger.error("Invaild target url", e);
 		    else
-			logger.fatal("Invaild target url");
+			logger.error("Invaild target url");
 		    MonitorThread.newError();
 		    httpPostReq = null;
 		    isError = true;
 		    break;
 		} catch (UnsupportedEncodingException e) {
 		    if (showExceptions)
-			logger.fatal("Unsupported Encoding", e);
+			logger.error("Unsupported Encoding", e);
 		    else
-			logger.fatal("Unsupported Encoding");
+			logger.error("Unsupported Encoding");
 		    MonitorThread.newError();
 		    httpPostReq = null;
 		    isError = true;
@@ -201,10 +201,10 @@ public class AttackerThread extends Thread {
 
 	}
 	if (!isReady) {
-	    logger.fatal("Exiting due to configuration error");
+	    logger.error("Exiting due to configuration error");
 	    return;
 	} else if (isError) {
-	    logger.fatal("Exiting due to an error occured");
+	    logger.error("Exiting due to an error occured");
 	    return;
 	} else {
 	    logger.info("Exiting due to termination");

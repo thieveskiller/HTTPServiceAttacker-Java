@@ -21,8 +21,8 @@ import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ishland.app.HTTPServiceAttacker.attacker.threads.AttackerThread;
 import com.ishland.app.HTTPServiceAttacker.attacker.threads.MonitorThread;
@@ -33,7 +33,7 @@ public class Attack {
     private static Configuration config = null;
     public static ArrayList<AttackerThread> thrs = new ArrayList<>();
     private static MonitorThread monitorThread = null;
-    private static final Logger logger = LogManager.getLogger("Attack manager");
+    private static final Logger logger = LoggerFactory.getLogger("Attack manager");
     private static ConnectingIOReactor ioReactor = null;
     private static PoolingNHttpClientConnectionManager cm = null;
     public static CloseableHttpAsyncClient httpClient = null;
@@ -42,7 +42,7 @@ public class Attack {
 	try {
 	    ioReactor = new DefaultConnectingIOReactor();
 	} catch (IOReactorException e) {
-	    logger.fatal("Unable to start IOReactor", e);
+	    logger.error("Unable to start IOReactor", e);
 	    System.exit(1);
 	    return;
 	}
@@ -65,7 +65,7 @@ public class Attack {
 			return Long.parseLong(value) * 1000;
 		    }
 		}
-		return 60 * 1000;// 如果没有约定，则默认定义时长为60s
+		return 60 * 1000;// 如果没有约定，则默认定义时长�?60s
 	    }
 	};
 	httpClient = HttpAsyncClients.custom().setConnectionReuseStrategy(new DefaultConnectionReuseStrategy())

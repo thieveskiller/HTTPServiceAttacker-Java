@@ -7,8 +7,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,7 +37,7 @@ public class MonitorThread extends Thread {
     private static long timeCre = 0;
 
     public static TimerTask logging = new TimerTask() {
-	private final Logger logger = LogManager.getLogger("Monitor Timer");
+	private final Logger logger = LoggerFactory.getLogger("Monitor Timer");
 
 	@Override
 	public void run() {
@@ -67,7 +67,7 @@ public class MonitorThread extends Thread {
 	    logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
 	    logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
 		    + String.valueOf(wsContent.totalRPS.longValue() * 60));
-	    logger.info("Created connections: " + String.valueOf(wsContent.createdConnections) + "/"
+	    logger.info("Queued requests: " + String.valueOf(wsContent.createdConnections) + "/"
 		    + String.valueOf(wsContent.maxAllowedConnections));
 	    logger.info("--------------------------------");
 	    timeReqs = 0;

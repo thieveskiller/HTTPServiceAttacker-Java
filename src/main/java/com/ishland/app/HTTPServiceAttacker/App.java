@@ -1,14 +1,14 @@
 package com.ishland.app.HTTPServiceAttacker;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ishland.app.HTTPServiceAttacker.attacker.Attack;
 import com.ishland.app.HTTPServiceAttacker.configuration.Configuration;
 import com.ishland.app.HTTPServiceAttacker.manager.webserver.WebServer;
 
 public class App {
-    private static final Logger logger = LogManager.getLogger("Launcher");
+    private static final Logger logger = LoggerFactory.getLogger("Launcher");
     private static Configuration config = null;
 
     public static void main(String[] args) {
@@ -25,7 +25,7 @@ public class App {
 		    Thread.sleep(10 * 1000);
 		} catch (InterruptedException e) {
 		}
-		logger.fatal("Cannot shutdown JVM normally, the JVM is shutting down forcibly.");
+		logger.error("Cannot shutdown JVM normally, the JVM is shutting down forcibly.");
 		Runtime.getRuntime().halt(0);
 	    }
 	}));
@@ -33,7 +33,7 @@ public class App {
 	try {
 	    Attack.startAttack();
 	} catch (IllegalAccessException e) {
-	    logger.fatal("Failed to start attack", e);
+	    logger.error("Failed to start attack", e);
 	    System.exit(2);
 	}
     }
