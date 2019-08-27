@@ -18,7 +18,7 @@ public class WSServlet extends WebSocketServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	response.getWriter().println("HTTP GET method not implemented.");
+	response.getWriter().println(WSConnection.lastBroadcact);
     }
 
     @Override

@@ -43,7 +43,7 @@ public class Configuration {
 	    @SuppressWarnings("unchecked")
 	    ArrayList<Map<String, Object>> targeta = (ArrayList<Map<String, Object>>) conf.get("target");
 	    setTarget(targeta);
-	    logger.debug(target);
+	    // logger.debug(target);
 	} catch (ClassCastException e) {
 	    logger.fatal("Invaild configuration file!", e);
 	    setSuccess(false);

@@ -62,7 +62,8 @@ public class MonitorThread extends Thread {
 	    logger.info("Total: " + String.valueOf(wsContent.successcount.longValue()
 		    + wsContent.failurecount.longValue() + wsContent.errored.longValue()));
 	    logger.info("Success info: " + wsContent.success.toString());
-	    logger.info("Failure info: " + wsContent.failure.toString() + " + " + wsContent.errored + " exceptions");
+	    logger.info("Failure info: " + wsContent.failure.toString() + " + " + wsContent.errored.toString()
+		    + " exceptions");
 	    logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
 	    logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
 		    + String.valueOf(wsContent.totalRPS.longValue() * 60));

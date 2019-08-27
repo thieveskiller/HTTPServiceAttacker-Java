@@ -38,7 +38,7 @@ public class WebServer {
 	} catch (URISyntaxException e1) {
 	    throw new RuntimeException(e1);
 	}
-	logger.info("WebRoot is " + webRootUri);
+	logger.info("WebRoot is " + webRootUri.toString());
 	try {
 	    servlet.setBaseResource(Resource.newResource(webRootUri));
 	} catch (MalformedURLException e1) {
