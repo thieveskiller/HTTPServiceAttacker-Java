@@ -34,7 +34,7 @@ public class MonitorThread extends Thread {
      * timeReqsNoFail = 0; private static long timeEl = 0;
      */
 
-    public static WSContent wsContent = new WSContent();
+    public static WSContent wsContent = null;
     private static long timeReqs = 0;
     private static long timeReqsNoFail = 0;
     private static long timeEl = 0;
@@ -63,6 +63,7 @@ public class MonitorThread extends Thread {
     }
 
     private void createTimer() {
+	wsContent = new WSContent();
 	logging = new TimerTask() {
 	    private final Logger logger = LoggerFactory.getLogger("Monitor Timer");
 
