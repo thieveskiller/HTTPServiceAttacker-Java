@@ -4,23 +4,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.http.HeaderElement;
-import org.apache.http.HeaderElementIterator;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
-import org.apache.http.message.BasicHeaderElementIterator;
-import org.apache.http.nio.reactor.ConnectingIOReactor;
-import org.apache.http.nio.reactor.IOReactorException;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.hc.core5.http.message.BasicHeaderElementIterator;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.reactor.IOReactorConfig;
+import org.apache.hc.core5.util.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,43 +32,38 @@ public class Attack {
     public static ArrayList<AttackerThread> thrs = new ArrayList<>();
     private static MonitorThread monitorThread = null;
     private static final Logger logger = LoggerFactory.getLogger("Attack manager");
-    private static ConnectingIOReactor ioReactor = null;
-    private static PoolingNHttpClientConnectionManager cm = null;
+    private static IOReactorConfig ioReactorConfig = null;
+    private static PoolingAsyncClientConnectionManager cm = null;
     public static CloseableHttpAsyncClient httpClient = null;
 
     public static void initClient(int threads) {
-	try {
-	    ioReactor = new DefaultConnectingIOReactor();
-	} catch (IOReactorException e) {
-	    logger.error("Unable to start IOReactor", e);
-	    System.exit(1);
-	    return;
-	}
-	cm = new PoolingNHttpClientConnectionManager(ioReactor);
+	ioReactorConfig = IOReactorConfig.custom().build();
+	cm = new PoolingAsyncClientConnectionManager();
 	cm.setMaxTotal(threads * 4096);
 	cm.setDefaultMaxPerRoute(threads * 4096);
-	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(30000).setSocketTimeout(30000)
-		.setConnectionRequestTimeout(30000).build();
+	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(30000, TimeUnit.MILLISECONDS)
+		.setConnectionRequestTimeout(30000, TimeUnit.MILLISECONDS)
+		.setResponseTimeout(30000, TimeUnit.MILLISECONDS).build();
 
 	ConnectionKeepAliveStrategy myStrategy = new ConnectionKeepAliveStrategy() {
 	    @Override
-	    public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
-		HeaderElementIterator it = new BasicHeaderElementIterator(
-			response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+	    public TimeValue getKeepAliveDuration(HttpResponse response, HttpContext context) {
+		BasicHeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator("connection"));
 		while (it.hasNext()) {
-		    HeaderElement he = it.nextElement();
+		    HeaderElement he = it.next();
 		    String param = he.getName();
 		    String value = he.getValue();
 		    if (value != null && param.equalsIgnoreCase("timeout")) {
-			return Long.parseLong(value) * 1000;
+			return TimeValue.ofSeconds(Long.parseLong(value));
 		    }
 		}
-		return 60 * 1000;// 如果没有约定，则默认定义时长�?60s
+		return TimeValue.ofSeconds(60);// 如果没有约定，则默认定义时长�?60s
 	    }
+
 	};
 	httpClient = HttpAsyncClients.custom().setConnectionReuseStrategy(new DefaultConnectionReuseStrategy())
 		.setKeepAliveStrategy(myStrategy).setDefaultRequestConfig(defaultRequestConfig).setConnectionManager(cm)
-		.build();
+		.setIOReactorConfig(ioReactorConfig).build();
 	httpClient.start();
     }
 
@@ -125,23 +118,13 @@ public class Attack {
 	    thr = null;
 	}
 	it = null;
-	if (ioReactor != null)
-	    try {
-		ioReactor.shutdown();
-	    } catch (IOException e2) {
-	    }
-	ioReactor = null;
+	ioReactorConfig = null;
 	if (httpClient != null)
 	    try {
 		httpClient.close();
 	    } catch (IOException e1) {
 	    }
 	httpClient = null;
-	if (cm != null)
-	    try {
-		cm.shutdown();
-	    } catch (IOException e1) {
-	    }
 	cm = null;
 	if (monitorThread != null) {
 	    monitorThread.stopTask();

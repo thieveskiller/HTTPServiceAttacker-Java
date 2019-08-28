@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,17 +119,15 @@ public class MonitorThread extends Thread {
 		continue;
 	    timeReqs++;
 	    timeReqsNoFail++;
-	    if (result.getStatusLine().getStatusCode() >= 200 && result.getStatusLine().getStatusCode() < 300) {
-		if (wsContent.success.get(result.getStatusLine().getStatusCode()) == null)
-		    wsContent.success.put(result.getStatusLine().getStatusCode(), 1L);
-		wsContent.success.put(result.getStatusLine().getStatusCode(),
-			wsContent.success.get(result.getStatusLine().getStatusCode()).longValue() + 1);
+	    if (result.getCode() >= 200 && result.getCode() < 300) {
+		if (wsContent.success.get(result.getCode()) == null)
+		    wsContent.success.put(result.getCode(), 1L);
+		wsContent.success.put(result.getCode(), wsContent.success.get(result.getCode()).longValue() + 1);
 		wsContent.successcount++;
 	    } else {
-		if (wsContent.failure.get(result.getStatusLine().getStatusCode()) == null)
-		    wsContent.failure.put(result.getStatusLine().getStatusCode(), 1L);
-		wsContent.failure.put(result.getStatusLine().getStatusCode(),
-			wsContent.failure.get(result.getStatusLine().getStatusCode()).longValue() + 1);
+		if (wsContent.failure.get(result.getCode()) == null)
+		    wsContent.failure.put(result.getCode(), 1L);
+		wsContent.failure.put(result.getCode(), wsContent.failure.get(result.getCode()).longValue() + 1);
 		wsContent.failurecount++;
 	    }
 	    result = null;

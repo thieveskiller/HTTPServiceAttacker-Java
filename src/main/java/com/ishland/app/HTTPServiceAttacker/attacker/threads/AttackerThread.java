@@ -1,17 +1,11 @@
 package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequests;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +29,10 @@ public class AttackerThread extends Thread {
     private String referer = "";
     private long startedCount = 0;
 
-    private FutureCallback<HttpResponse> callback = new FutureCallback<HttpResponse>() {
+    private FutureCallback<SimpleHttpResponse> callback = new FutureCallback<SimpleHttpResponse>() {
 
 	@Override
-	public void completed(HttpResponse httpResponse) {
+	public void completed(SimpleHttpResponse httpResponse) {
 	    synchronized (this) {
 		this.notifyAll();
 	    }
@@ -69,14 +63,6 @@ public class AttackerThread extends Thread {
 		    logger.warn("Internal error");
 		MonitorThread.newError();
 		httpResponse = null;
-	    }
-	    try {
-		EntityUtils.consume(httpResponse.getEntity());
-	    } catch (Throwable e) {
-		// if (showExceptions)
-		// logger.warn("Error while consuming entity", e);
-		// else
-		// logger.warn("Error while consuming entity");
 	    }
 	}
 
@@ -131,9 +117,6 @@ public class AttackerThread extends Thread {
 	    MonitorThread.newError();
 	    isReady = false;
 	}
-	List<Header> defaultHeaders = Arrays.asList(new BasicHeader("User-Agent",
-		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
-		new BasicHeader("Referer", this.referer), new BasicHeader("Connection", "keep-alive"));
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
 	logger.info(this.getName() + " started.");
 	// System.out.println(Attack.replacePlaceHolders(this.target));
@@ -156,48 +139,39 @@ public class AttackerThread extends Thread {
 	    }
 	    startedCount++;
 	    MonitorThread.newCreation();
+	    SimpleHttpRequest req = null;
 	    if (this.method == GET) {
-		HttpGet httpGetReq = null;
 		try {
-		    httpGetReq = new HttpGet(Attack.replacePlaceHolders(this.target));
-		    httpGetReq.setHeaders((Header[]) defaultHeaders.toArray());
+		    req = SimpleHttpRequests.GET.create(Attack.replacePlaceHolders(this.target));
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
 		    else
 			logger.error("Invaild target url");
-		    httpGetReq = null;
 		    MonitorThread.newError();
+		    req = null;
 		    isError = true;
 		    break;
 		}
-		Attack.httpClient.execute(httpGetReq, callback);
 	    } else if (this.method == POST) {
-		HttpPost httpPostReq = null;
 		try {
-		    httpPostReq = new HttpPost(Attack.replacePlaceHolders(this.target));
-		    httpPostReq.setEntity(new StringEntity(Attack.replacePlaceHolders(this.data)));
+		    req = SimpleHttpRequests.POST.create(Attack.replacePlaceHolders(this.target));
+		    req.setBodyText(Attack.replacePlaceHolders(getData()), ContentType.APPLICATION_FORM_URLENCODED);
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
 		    else
 			logger.error("Invaild target url");
 		    MonitorThread.newError();
-		    httpPostReq = null;
-		    isError = true;
-		    break;
-		} catch (UnsupportedEncodingException e) {
-		    if (showExceptions)
-			logger.error("Unsupported Encoding", e);
-		    else
-			logger.error("Unsupported Encoding");
-		    MonitorThread.newError();
-		    httpPostReq = null;
+		    req = null;
 		    isError = true;
 		    break;
 		}
-		Attack.httpClient.execute(httpPostReq, callback);
 	    }
+	    req.setHeaders(new BasicHeader("User-Agent",
+		    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
+		    new BasicHeader("Referer", this.referer), new BasicHeader("Connection", "keep-alive"));
+	    Attack.httpClient.execute(req, callback);
 
 	}
 	if (!isReady) {
