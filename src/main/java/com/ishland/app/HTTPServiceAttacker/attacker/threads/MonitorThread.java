@@ -1,8 +1,12 @@
 package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -36,53 +40,9 @@ public class MonitorThread extends Thread {
     private static long timeEl = 0;
     private static long timeCre = 0;
 
-    public static TimerTask logging = new TimerTask() {
-	private final Logger logger = LoggerFactory.getLogger("Monitor Timer");
+    public static TimerTask logging;
 
-	@Override
-	public void run() {
-	    wsContent.vaildRPS = (float) (timeReqsNoFail) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
-	    wsContent.totalRPS = (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
-	    wsContent.creationSpeed = (long) ((timeCre) / ((float) (System.currentTimeMillis() - timeEl) / 1000));
-	    wsContent.maxVaildRPS = wsContent.maxVaildRPS.doubleValue() > wsContent.vaildRPS.doubleValue()
-		    ? wsContent.maxVaildRPS.doubleValue()
-		    : wsContent.vaildRPS.doubleValue();
-	    wsContent.maxTotalRPS = wsContent.maxTotalRPS.doubleValue() > wsContent.totalRPS.doubleValue()
-		    ? wsContent.maxTotalRPS.doubleValue()
-		    : wsContent.totalRPS.doubleValue();
-	    wsContent.maxCreationSpeed = wsContent.maxCreationSpeed.longValue() > wsContent.creationSpeed.longValue()
-		    ? wsContent.maxCreationSpeed.longValue()
-		    : wsContent.creationSpeed.longValue();
-	    wsContent.freeHeap = Runtime.getRuntime().freeMemory();
-	    wsContent.allocatedHeap = Runtime.getRuntime().totalMemory();
-	    wsContent.freeHeap = wsContent.allocatedHeap.longValue() - wsContent.freeHeap.longValue();
-	    wsContent.maxHeap = Runtime.getRuntime().maxMemory();
-	    wsContent.createdConnections = AttackerThread.openedCount;
-
-	    logger.info("Total: " + String.valueOf(wsContent.successcount.longValue()
-		    + wsContent.failurecount.longValue() + wsContent.errored.longValue()));
-	    logger.info("Success info: " + wsContent.success.toString());
-	    logger.info("Failure info: " + wsContent.failure.toString() + " + " + wsContent.errored.toString()
-		    + " exceptions");
-	    logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
-	    logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
-		    + String.valueOf(wsContent.totalRPS.longValue() * 60));
-	    logger.info("Queued requests: " + String.valueOf(wsContent.createdConnections) + "/"
-		    + String.valueOf(wsContent.maxAllowedConnections));
-	    logger.info("--------------------------------");
-	    timeReqs = 0;
-	    timeReqsNoFail = 0;
-	    timeEl = System.currentTimeMillis();
-	    String json = "";
-	    try {
-		json = gson.toJson(wsContent);
-	    } catch (IllegalArgumentException e) {
-		logger.warn("Error while searlizing json: " + e.getMessage());
-	    }
-	    WSConnection.boardcast(json);
-	}
-
-    };
+    private static List<Callable<Object>> listCallbacks = new ArrayList<>();
 
     public static synchronized void newError() {
 	wsContent.errored++;
@@ -98,10 +58,72 @@ public class MonitorThread extends Thread {
 	queue.put(httpResponse);
     }
 
+    public static boolean registerCallback(Callable<Object> callback) {
+	return listCallbacks.add(callback);
+    }
+
+    private void createTimer() {
+	logging = new TimerTask() {
+	    private final Logger logger = LoggerFactory.getLogger("Monitor Timer");
+
+	    @Override
+	    public void run() {
+		wsContent.vaildRPS = (float) (timeReqsNoFail)
+			/ ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
+		wsContent.totalRPS = (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
+		wsContent.creationSpeed = (long) ((timeCre) / ((float) (System.currentTimeMillis() - timeEl) / 1000));
+		wsContent.maxVaildRPS = wsContent.maxVaildRPS.doubleValue() > wsContent.vaildRPS.doubleValue()
+			? wsContent.maxVaildRPS.doubleValue()
+			: wsContent.vaildRPS.doubleValue();
+		wsContent.maxTotalRPS = wsContent.maxTotalRPS.doubleValue() > wsContent.totalRPS.doubleValue()
+			? wsContent.maxTotalRPS.doubleValue()
+			: wsContent.totalRPS.doubleValue();
+		wsContent.maxCreationSpeed = wsContent.maxCreationSpeed.longValue() > wsContent.creationSpeed
+			.longValue() ? wsContent.maxCreationSpeed.longValue() : wsContent.creationSpeed.longValue();
+		wsContent.freeHeap = Runtime.getRuntime().freeMemory();
+		wsContent.allocatedHeap = Runtime.getRuntime().totalMemory();
+		wsContent.freeHeap = wsContent.allocatedHeap.longValue() - wsContent.freeHeap.longValue();
+		wsContent.maxHeap = Runtime.getRuntime().maxMemory();
+		wsContent.createdConnections = AttackerThread.openedCount;
+
+		logger.info("Total: " + String.valueOf(wsContent.successcount.longValue()
+			+ wsContent.failurecount.longValue() + wsContent.errored.longValue()));
+		logger.info("Success info: " + wsContent.success.toString());
+		logger.info("Failure info: " + wsContent.failure.toString() + " + " + wsContent.errored.toString()
+			+ " exceptions");
+		logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
+		logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
+			+ String.valueOf(wsContent.totalRPS.longValue() * 60));
+		logger.info("Queued requests: " + String.valueOf(wsContent.createdConnections) + "/"
+			+ String.valueOf(wsContent.maxAllowedConnections));
+		logger.info("--------------------------------");
+		timeReqs = 0;
+		timeReqsNoFail = 0;
+		timeEl = System.currentTimeMillis();
+		String json = "";
+		try {
+		    json = gson.toJson(wsContent);
+		} catch (IllegalArgumentException e) {
+		    logger.warn("Error while searlizing json: " + e.getMessage());
+		}
+		WSConnection.boardcast(json);
+		Iterator<Callable<Object>> it = listCallbacks.iterator();
+		while (it.hasNext())
+		    try {
+			it.next().call();
+		    } catch (Exception e) {
+			logger.warn("Cannot pass onMonitorRefresh event", e);
+		    }
+	    }
+
+	};
+    }
+
     public void run() {
 	GsonBuilder gsona = new GsonBuilder();
 	gsona.serializeSpecialFloatingPointValues();
 	gson = gsona.create();
+	createTimer();
 	new Timer().schedule(logging, 0, 500);
 	int totalthreads = 0;
 	for (int i = 0; i < Attack.getConfig().getTarget().size(); i++)
