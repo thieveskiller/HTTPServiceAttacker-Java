@@ -34,7 +34,7 @@ public class MonitorThread extends Thread {
      * timeReqsNoFail = 0; private static long timeEl = 0;
      */
 
-    private static WSContent wsContent = new WSContent();
+    public static WSContent wsContent = new WSContent();
     private static long timeReqs = 0;
     private static long timeReqsNoFail = 0;
     private static long timeEl = 0;
