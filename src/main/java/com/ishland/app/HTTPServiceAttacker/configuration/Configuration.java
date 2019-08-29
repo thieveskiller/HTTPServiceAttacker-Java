@@ -69,7 +69,7 @@ public class Configuration {
 	    logger.debug("Parsing YAML root...");
 	    @SuppressWarnings("unchecked")
 	    Map<String, Object> conf = (Map<String, Object>) new YamlReader(reader).read();
-	    setShowExceptions((boolean) conf.get("showExceptions"));
+	    setShowExceptions(Boolean.valueOf(String.valueOf(conf.get("showExceptions"))));
 	    logger.debug("Parsing YAML root.target...");
 	    @SuppressWarnings("unchecked")
 	    ArrayList<Map<String, Object>> targeta = (ArrayList<Map<String, Object>>) conf.get("target");
