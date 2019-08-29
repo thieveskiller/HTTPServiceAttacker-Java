@@ -123,7 +123,7 @@ public class AttackerThread extends Thread {
 	// System.out.println(Attack.replacePlaceHolders(this.data));
 
 	while (!isStopping && isReady) {
-	    if (startedCount > 4096) {
+	    if (startedCount > Attack.maxConnectionPerThread) {
 		synchronized (callback) {
 		    logger.info("Opened connection above threshold, sleeping");
 		    try {

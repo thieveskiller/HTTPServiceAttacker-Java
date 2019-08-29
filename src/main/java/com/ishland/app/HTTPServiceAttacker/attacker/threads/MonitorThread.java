@@ -130,7 +130,7 @@ public class MonitorThread extends Thread {
 	for (int i = 0; i < Attack.getConfig().getTarget().size(); i++)
 	    totalthreads += Integer.valueOf(String.valueOf(Attack.getConfig().getTarget().get(i).get("threads")))
 		    .intValue();
-	wsContent.maxAllowedConnections = (long) (totalthreads * 4096);
+	wsContent.maxAllowedConnections = (long) (totalthreads * Attack.maxConnectionPerThread);
 	while (!isStopping) {
 	    HttpResponse result = null;
 	    try {

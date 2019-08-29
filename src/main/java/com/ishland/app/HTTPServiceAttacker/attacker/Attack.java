@@ -36,11 +36,13 @@ public class Attack {
     private static PoolingAsyncClientConnectionManager cm = null;
     public static CloseableHttpAsyncClient httpClient = null;
 
+    public static int maxConnectionPerThread = 4096;
+
     public static void initClient(int threads) {
 	ioReactorConfig = IOReactorConfig.custom().build();
 	cm = new PoolingAsyncClientConnectionManager();
-	cm.setMaxTotal(threads * 4096);
-	cm.setDefaultMaxPerRoute(threads * 4096);
+	cm.setMaxTotal(threads * Attack.maxConnectionPerThread);
+	cm.setDefaultMaxPerRoute(threads * Attack.maxConnectionPerThread);
 	RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(30000, TimeUnit.MILLISECONDS)
 		.setConnectionRequestTimeout(30000, TimeUnit.MILLISECONDS)
 		.setResponseTimeout(30000, TimeUnit.MILLISECONDS).build();
