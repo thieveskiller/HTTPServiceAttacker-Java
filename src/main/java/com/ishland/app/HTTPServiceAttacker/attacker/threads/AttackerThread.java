@@ -45,23 +45,17 @@ public class AttackerThread extends Thread {
 	    } catch (NullPointerException e) {
 		if (showExceptions)
 		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
+		MonitorThread.newError(e);
 		httpResponse = null;
 	    } catch (IllegalArgumentException e) {
 		if (showExceptions)
 		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
+		MonitorThread.newError(e);
 		httpResponse = null;
 	    } catch (InterruptedException e) {
 		if (showExceptions)
 		    logger.warn("Internal error", e);
-		else
-		    logger.warn("Internal error");
-		MonitorThread.newError();
+		MonitorThread.newError(e);
 		httpResponse = null;
 	    }
 	}
@@ -77,9 +71,7 @@ public class AttackerThread extends Thread {
 	    startedCount--;
 	    if (showExceptions)
 		logger.warn("Error while making request", ex);
-	    else
-		logger.warn("Error while making request: " + ex.getMessage());
-	    MonitorThread.newError();
+	    MonitorThread.newError(ex);
 	}
 
 	@Override
@@ -109,12 +101,12 @@ public class AttackerThread extends Thread {
 	boolean isError = false;
 	if (target == null) {
 	    logger.error("Target must not be null");
-	    MonitorThread.newError();
+	    MonitorThread.newError(new RuntimeException("Target must not be null"));
 	    isReady = false;
 	}
 	if (method == POST && data == null) {
 	    logger.error("You must set the data in POST mode");
-	    MonitorThread.newError();
+	    MonitorThread.newError(new RuntimeException("You must set the data in POST mode"));
 	    isReady = false;
 	}
 	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
@@ -146,9 +138,7 @@ public class AttackerThread extends Thread {
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
-		    else
-			logger.error("Invaild target url");
-		    MonitorThread.newError();
+		    MonitorThread.newError(e);
 		    req = null;
 		    isError = true;
 		    break;
@@ -160,9 +150,7 @@ public class AttackerThread extends Thread {
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
-		    else
-			logger.error("Invaild target url");
-		    MonitorThread.newError();
+		    MonitorThread.newError(e);
 		    req = null;
 		    isError = true;
 		    break;

@@ -3,6 +3,7 @@ package com.ishland.app.HTTPServiceAttacker.attacker.threads;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -44,9 +45,13 @@ public class MonitorThread extends Thread {
 
     private static List<Callable<Object>> listCallbacks = new ArrayList<>();
 
-    public static synchronized void newError() {
+    public static synchronized void newError(Exception e) {
 	wsContent.errored++;
 	timeReqs++;
+	if (!wsContent.errors.containsKey(e.getMessage()))
+	    wsContent.errors.put(e.getMessage(), 1L);
+	else
+	    wsContent.errors.put(e.getMessage(), wsContent.errors.get(e.getMessage()) + 1L);
     }
 
     public static synchronized void newCreation() {
@@ -69,6 +74,8 @@ public class MonitorThread extends Thread {
 
 	    @Override
 	    public void run() {
+		if (((float) (System.currentTimeMillis() - timeEl) / 1000.0) < 0.1)
+		    return;
 		wsContent.vaildRPS = (float) (timeReqsNoFail)
 			/ ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
 		wsContent.totalRPS = (float) (timeReqs) / ((float) (System.currentTimeMillis() - timeEl) / 1000.0);
@@ -92,6 +99,11 @@ public class MonitorThread extends Thread {
 		logger.info("Success info: " + wsContent.success.toString());
 		logger.info("Failure info: " + wsContent.failure.toString() + " + " + wsContent.errored.toString()
 			+ " exceptions");
+		Iterator<Entry<String, Long>> ita = wsContent.errors.entrySet().iterator();
+		while (ita.hasNext()) {
+		    Entry<String, Long> entry = ita.next();
+		    logger.info(entry.getKey() + ": " + entry.getValue());
+		}
 		logger.info("RPS: " + String.valueOf(wsContent.vaildRPS) + "/" + String.valueOf(wsContent.totalRPS));
 		logger.info("RPM: " + String.valueOf(wsContent.vaildRPS.longValue() * 60) + "/"
 			+ String.valueOf(wsContent.totalRPS.longValue() * 60));

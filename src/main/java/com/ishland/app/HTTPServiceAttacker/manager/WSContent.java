@@ -8,6 +8,7 @@ public class WSContent {
     public Long successcount = 0L;
     public Map<Integer, Long> failure = new HashMap<>();
     public Long failurecount = 0L;
+    public Map<String, Long> errors = new HashMap<>();
     public Long errored = 0L;
     public Double vaildRPS = 0.0;
     public Double totalRPS = 0.0;
