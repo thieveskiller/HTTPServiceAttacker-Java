@@ -29,6 +29,10 @@ public class AttackerThread extends Thread {
     private String referer = "";
     private long startedCount = 0;
 
+    private synchronized void operate(long count) {
+	openedCount += count;
+    }
+
     private FutureCallback<SimpleHttpResponse> callback = new FutureCallback<SimpleHttpResponse>() {
 
 	@Override
@@ -36,9 +40,7 @@ public class AttackerThread extends Thread {
 	    synchronized (this) {
 		this.notifyAll();
 	    }
-	    synchronized (openedCount) {
-		openedCount--;
-	    }
+	    operate(-1);
 	    startedCount--;
 	    try {
 		MonitorThread.pushResult(httpResponse);
@@ -65,9 +67,7 @@ public class AttackerThread extends Thread {
 	    synchronized (this) {
 		this.notifyAll();
 	    }
-	    synchronized (openedCount) {
-		openedCount--;
-	    }
+	    operate(-1);
 	    startedCount--;
 	    if (showExceptions)
 		logger.warn("Error while making request", ex);
@@ -79,11 +79,8 @@ public class AttackerThread extends Thread {
 	    synchronized (this) {
 		this.notifyAll();
 	    }
-	    synchronized (openedCount) {
-		openedCount--;
-	    }
+	    operate(-1);
 	    startedCount--;
-	    logger.info("Cancelled");
 	}
 
     };
@@ -117,18 +114,14 @@ public class AttackerThread extends Thread {
 	while (!isStopping && isReady) {
 	    if (startedCount > Attack.maxConnectionPerThread) {
 		synchronized (callback) {
-		    logger.info("Opened connection above threshold, sleeping");
 		    try {
 			callback.wait();
 		    } catch (InterruptedException e) {
 		    }
-		    logger.info("Continuing");
 		    continue;
 		}
 	    }
-	    synchronized (openedCount) {
-		openedCount++;
-	    }
+	    operate(1);
 	    startedCount++;
 	    MonitorThread.newCreation();
 	    SimpleHttpRequest req = null;

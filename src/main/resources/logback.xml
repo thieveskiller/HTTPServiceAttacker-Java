@@ -6,12 +6,8 @@
 			<pattern>[%d{HH:mm:ss.SSS}] [%thread/%level] [%logger{36}] %msg%n
 			</pattern>
 		</encoder>
+		<filter class="com.ishland.app.HTTPServiceAttacker.configuration.LoggingEventHandler"></filter>
 	</appender>
-
-	<logger name="org.apache.http.impl.execchain.RetryExec"
-		level="WARN">
-		<appender-ref ref="STDOUT" />
-	</logger>
 
 	<root level="info">
 		<appender-ref ref="STDOUT" />

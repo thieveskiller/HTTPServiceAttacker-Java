@@ -56,16 +56,16 @@ ws.addEventListener('message', function (event) {
     };
     charts.gauge_1.setOption(option, true);
 
-    // 仪表盘 连接创建
+    // 仪表盘 请求创建数
     var option = {
         series: [{
             type: 'gauge',
-            max: data.maxCreationSpeed.toFixed(0),
+            max: data.maxAllowedConnections.toFixed(0),
             detail: {
                 formatter: '{value}/s'
             },
             data: [{
-                value: data.creationSpeed.toFixed(0),
+                value: data.createdConnections.toFixed(0),
                 name: '连接创建'
             }]
         }]
@@ -153,7 +153,7 @@ function draw() {
         }]
     };
     charts.gauge_1.setOption(option, true);
-    // 仪表盘 创建速度
+    // 仪表盘 请求创建数
     var option = {
         tooltip: {
             formatter: "{a} <br/>{b} : {c}/s"
@@ -167,7 +167,7 @@ function draw() {
             },
             data: [{
                 value: 0,
-                name: '创建速度'
+                name: '请求创建数'
             }]
         }]
     };

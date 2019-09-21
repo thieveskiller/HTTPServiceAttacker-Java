@@ -15,15 +15,18 @@ import org.slf4j.LoggerFactory;
 public class WSConnection {
     private static final Logger logger = LoggerFactory.getLogger("Websocket Server");
 
-    public static List<Session> sessions = new CopyOnWriteArrayList<>();
+    public static List<WSConnection> sessions = new CopyOnWriteArrayList<>();
 
     public static String lastBroadcact = "";
+
+    public Session currentSession;
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
 	if (session.isOpen()) {
 	    logger.info(session.getRemoteAddress().toString() + " - " + "New connection");
-	    sessions.add(session);
+	    sessions.add(this);
+	    currentSession = session;
 	}
     }
 
@@ -35,13 +38,13 @@ public class WSConnection {
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
 	logger.info(session.getRemoteAddress().toString() + " - " + "Connection closed");
-	sessions.remove(session);
+	sessions.remove(this);
     }
 
     public static void boardcast(String str) {
 	WSConnection.lastBroadcact = str;
-	for (Session session : sessions)
-	    session.getRemote().sendStringByFuture(str);
+	for (WSConnection session : sessions)
+	    session.currentSession.getRemote().sendStringByFuture(str);
     }
 
 }

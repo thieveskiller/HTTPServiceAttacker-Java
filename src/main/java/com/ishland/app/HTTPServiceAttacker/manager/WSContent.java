@@ -10,6 +10,7 @@ public class WSContent {
     public Long failurecount = 0L;
     public Map<String, Long> errors = new HashMap<>();
     public Long errored = 0L;
+    public Map<String, Long> responses = new HashMap<>();
     public Double vaildRPS = 0.0;
     public Double totalRPS = 0.0;
     public Double maxVaildRPS = 0.0;
