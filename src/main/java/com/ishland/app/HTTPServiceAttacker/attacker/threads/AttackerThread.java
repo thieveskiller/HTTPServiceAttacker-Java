@@ -88,7 +88,8 @@ public class AttackerThread extends Thread {
     public AttackerThread() {
 	super();
 	num++;
-	logger = LoggerFactory.getLogger("Attacker Thread - " + String.valueOf(num));
+	logger = LoggerFactory
+		.getLogger("Attacker Thread - " + String.valueOf(num));
 	this.setName("Attacker Thread - " + String.valueOf(num));
     }
 
@@ -98,15 +99,18 @@ public class AttackerThread extends Thread {
 	boolean isError = false;
 	if (target == null) {
 	    logger.error("Target must not be null");
-	    MonitorThread.newError(new RuntimeException("Target must not be null"));
+	    MonitorThread
+		    .newError(new RuntimeException("Target must not be null"));
 	    isReady = false;
 	}
 	if (method == POST && data == null) {
 	    logger.error("You must set the data in POST mode");
-	    MonitorThread.newError(new RuntimeException("You must set the data in POST mode"));
+	    MonitorThread.newError(
+		    new RuntimeException("You must set the data in POST mode"));
 	    isReady = false;
 	}
-	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ") + target);
+	logger.info("Using " + (method == POST ? "POST" : "GET" + " to attack ")
+		+ target);
 	logger.info(this.getName() + " started.");
 	// System.out.println(Attack.replacePlaceHolders(this.target));
 	// System.out.println(Attack.replacePlaceHolders(this.data));
@@ -127,7 +131,8 @@ public class AttackerThread extends Thread {
 	    SimpleHttpRequest req = null;
 	    if (this.method == GET) {
 		try {
-		    req = SimpleHttpRequests.GET.create(Attack.replacePlaceHolders(this.target));
+		    req = SimpleHttpRequests.GET
+			    .create(Attack.replacePlaceHolders(this.target));
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
@@ -138,8 +143,10 @@ public class AttackerThread extends Thread {
 		}
 	    } else if (this.method == POST) {
 		try {
-		    req = SimpleHttpRequests.POST.create(Attack.replacePlaceHolders(this.target));
-		    req.setBodyText(Attack.replacePlaceHolders(getData()), ContentType.APPLICATION_FORM_URLENCODED);
+		    req = SimpleHttpRequests.POST
+			    .create(Attack.replacePlaceHolders(this.target));
+		    req.setBodyText(Attack.replacePlaceHolders(getData()),
+			    ContentType.APPLICATION_FORM_URLENCODED);
 		} catch (IllegalArgumentException e) {
 		    if (showExceptions)
 			logger.error("Invaild target url", e);
@@ -151,7 +158,7 @@ public class AttackerThread extends Thread {
 	    }
 	    req.setHeaders(new BasicHeader("User-Agent",
 		    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"),
-		    new BasicHeader("Referer", this.referer), new BasicHeader("Connection", "keep-alive"));
+		    new BasicHeader("Referer", this.referer));
 	    Attack.httpClient.execute(req, callback);
 
 	}
