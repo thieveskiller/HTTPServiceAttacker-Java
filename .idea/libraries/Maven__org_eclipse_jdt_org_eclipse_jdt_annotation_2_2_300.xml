@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.300">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jdt/org.eclipse.jdt.annotation/2.2.300/org.eclipse.jdt.annotation-2.2.300.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jdt/org.eclipse.jdt.annotation/2.2.300/org.eclipse.jdt.annotation-2.2.300-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jdt/org.eclipse.jdt.annotation/2.2.300/org.eclipse.jdt.annotation-2.2.300-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

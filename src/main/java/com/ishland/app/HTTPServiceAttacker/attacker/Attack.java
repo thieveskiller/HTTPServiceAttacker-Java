@@ -30,7 +30,7 @@ public class Attack {
     public static final ArrayList<AttackerThread> thrs = new ArrayList<>();
     public static CloseableHttpAsyncClient httpClient = null;
     public static final int maxConnectionPerThread = 4096;
-    private static Configuration config = null;
+    public static Configuration config = null;
     private static MonitorThread monitorThread = null;
     private static IOReactorConfig ioReactorConfig = null;
     private static PoolingAsyncClientConnectionManager cm = null;
@@ -148,22 +148,34 @@ public class Attack {
 
     public static String replacePlaceHolders(String origin) {
         String result = origin;
-        result = result.replaceAll("\\[QQ]",
-                RandomStringUtils.randomNumeric(5, 10));
-        result = result.replaceAll("\\[86Phone]",
-                "1" + RandomStringUtils.randomNumeric(10));
-        result = result.replaceAll("\\[time_sec]",
-                String.valueOf(System.currentTimeMillis() / 1000));
-        for (int i = 1; i <= 32; i++) {
-            result = result.replaceAll("\\[Ascii_" + i + "]",
-                    RandomStringUtils.randomAscii(i));
-            result = result.replaceAll("\\[Number_" + i + "]",
-                    RandomStringUtils.randomNumeric(i));
-            result = result.replaceAll("\\[Alpha_" + i + "]",
-                    RandomStringUtils.randomAlphabetic(i));
-            result = result.replaceAll("\\[NumAlp_" + i + "]",
-                    RandomStringUtils.randomAlphanumeric(i));
-        }
+        if (result.contains("[QQ]"))
+            result = result.replaceAll("\\[QQ]",
+                    RandomStringUtils.randomNumeric(5, 10));
+        if (result.contains("[86Phone]"))
+            result = result.replaceAll("\\[86Phone]",
+                    "1" + RandomStringUtils.randomNumeric(10));
+        if (result.contains("[time_sec]"))
+            result = result.replaceAll("\\[time_sec]",
+                    String.valueOf(System.currentTimeMillis() / 1000));
+        boolean hasAscii = result.matches("\\[Ascii_.+]");
+        boolean hasNumber = result.matches("\\[Number_.+]");
+        boolean hasAlpha = result.matches("\\[Alpha_.+]");
+        boolean hasNumAlp = result.matches("\\[NumAlp_.+]");
+        if (hasAscii || hasNumber || hasAlpha || hasNumAlp)
+            for (int i = 1; i <= 16; i++) {
+                if (hasAscii)
+                    result = result.replaceAll("\\[Ascii_" + i + "]",
+                            RandomStringUtils.randomAscii(i));
+                if (hasNumber)
+                    result = result.replaceAll("\\[Number_" + i + "]",
+                            RandomStringUtils.randomNumeric(i));
+                if (hasAlpha)
+                    result = result.replaceAll("\\[Alpha_" + i + "]",
+                            RandomStringUtils.randomAlphabetic(i));
+                if (hasNumAlp)
+                    result = result.replaceAll("\\[NumAlp_" + i + "]",
+                            RandomStringUtils.randomAlphanumeric(i));
+            }
         return result;
     }
 

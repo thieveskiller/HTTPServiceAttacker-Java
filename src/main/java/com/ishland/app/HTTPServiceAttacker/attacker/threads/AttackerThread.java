@@ -33,7 +33,7 @@ public class AttackerThread extends Thread {
                 this.notifyAll();
             }
             operate(-1);
-            startedCount--;
+            operateThis(-1);
             try {
                 MonitorThread.pushResult(httpResponse);
             } catch (NullPointerException | InterruptedException | IllegalArgumentException e) {
@@ -49,7 +49,7 @@ public class AttackerThread extends Thread {
                 this.notifyAll();
             }
             operate(-1);
-            startedCount--;
+            operateThis(-1);
             if (showExceptions)
                 logger.warn("Error while making request", ex);
             MonitorThread.newError(ex);
@@ -61,10 +61,14 @@ public class AttackerThread extends Thread {
                 this.notifyAll();
             }
             operate(-1);
-            startedCount--;
+            operateThis(-1);
         }
 
     };
+
+    private synchronized void operateThis(int count) {
+        startedCount += count;
+    }
 
     public AttackerThread() {
         super();
@@ -108,30 +112,38 @@ public class AttackerThread extends Thread {
             if (startedCount > Attack.maxConnectionPerThread) {
                 synchronized (callback) {
                     try {
-                        callback.wait();
+                        callback.wait(1000, 0);
                     } catch (InterruptedException ignored) {
                     }
                     continue;
                 }
             }
             operate(1);
-            startedCount++;
+            operateThis(1);
             MonitorThread.newCreation();
             SimpleHttpRequest req;
             if (this.method == GET) {
                 try {
-                    req = SimpleHttpRequests.get(Attack.replacePlaceHolders(this.target));
+                    if (Attack.config.usePlaceholders)
+                        req = SimpleHttpRequests.get(Attack.replacePlaceHolders(this.target));
+                    else
+                        req = SimpleHttpRequests.get(this.target);
                 } catch (IllegalArgumentException e) {
                     if (showExceptions)
-                        logger.error("Invaild target url", e);
+                        logger.error("Invalid target url", e);
                     MonitorThread.newError(e);
                     isError = true;
                     break;
                 }
             } else if (this.method == POST) {
                 try {
-                    req = SimpleHttpRequests.post(Attack.replacePlaceHolders(this.target));
-                    req.setBody(Attack.replacePlaceHolders(getData()), ContentType.APPLICATION_FORM_URLENCODED);
+                    if (Attack.config.usePlaceholders) {
+                        req = SimpleHttpRequests.post(Attack.replacePlaceHolders(this.target));
+                        req.setBody(Attack.replacePlaceHolders(getData()), ContentType.APPLICATION_FORM_URLENCODED);
+                    } else {
+                        req = SimpleHttpRequests.post(this.target);
+                        req.setBody(data, ContentType.APPLICATION_FORM_URLENCODED);
+                    }
                 } catch (IllegalArgumentException e) {
                     if (showExceptions)
                         logger.error("Invalid target url", e);
@@ -149,7 +161,7 @@ public class AttackerThread extends Thread {
         if (!isReady) {
             logger.error("Exiting due to configuration error");
         } else if (isError) {
-            logger.error("Exiting due to an error occured");
+            logger.error("Exiting due to an error occurred");
         } else {
             logger.info("Exiting due to termination");
         }

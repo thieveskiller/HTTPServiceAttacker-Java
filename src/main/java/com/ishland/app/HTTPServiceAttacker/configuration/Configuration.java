@@ -15,36 +15,9 @@ public class Configuration {
     private File configfile = new File(System.getProperty("user.dir") + "/config.yml");
     private ArrayList<Map<String, Object>> target = null;
     private boolean showExceptions = false;
+    public boolean usePlaceholders = true;
+    private boolean useWebServer = true;
     private boolean isSuccess = true;
-
-    public Configuration(@NonNull File config) {
-        this.configfile = config;
-        logger.info("Loading configurations...");
-        FileReader reader;
-        try {
-            logger.debug("Preparing configuration file stream...");
-            reader = new FileReader(configfile);
-        } catch (FileNotFoundException e) {
-            logger.error("Unable to load configuration file, creating one and exit...", e);
-            createFile();
-            makeFail();
-            return;
-        }
-        try {
-            logger.debug("Parsing YAML root...");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> conf = (Map<String, Object>) new YamlReader(reader).read();
-            setShowExceptions(Boolean.parseBoolean(String.valueOf(conf.get("showExceptions"))));
-            logger.debug("Parsing YAML root.target...");
-            @SuppressWarnings("unchecked")
-            ArrayList<Map<String, Object>> targeta = (ArrayList<Map<String, Object>>) conf.get("target");
-            setTarget(targeta);
-            // logger.debug(target);
-        } catch (ClassCastException | YamlException e) {
-            logger.error("Invaild configuration file!", e);
-            makeFail();
-        }
-    }
 
     public Configuration() {
         logger.info("Loading configurations...");
@@ -63,11 +36,13 @@ public class Configuration {
             @SuppressWarnings("unchecked")
             Map<String, Object> conf = (Map<String, Object>) new YamlReader(reader).read();
             setShowExceptions(Boolean.parseBoolean(String.valueOf(conf.get("showExceptions"))));
+            setUsePlaceholders(Boolean.parseBoolean(String.valueOf(conf.get("usePlaceholders"))));
+            setUseWebServer(Boolean.parseBoolean(String.valueOf(conf.get("useWebServer"))));
             logger.debug("Parsing YAML root.target...");
             @SuppressWarnings("unchecked")
             ArrayList<Map<String, Object>> targeta = (ArrayList<Map<String, Object>>) conf.get("target");
             setTarget(targeta);
-            // logger.debug(target.toString());
+            // logger.debug(target);
         } catch (ClassCastException | YamlException e) {
             logger.error("Invaild configuration file!", e);
             makeFail();
@@ -135,5 +110,21 @@ public class Configuration {
      */
     private void setShowExceptions(boolean showExceptions) {
         this.showExceptions = showExceptions;
+    }
+
+    public boolean isUsePlaceholders() {
+        return usePlaceholders;
+    }
+
+    public void setUsePlaceholders(boolean usePlaceholders) {
+        this.usePlaceholders = usePlaceholders;
+    }
+
+    public boolean isUseWebServer() {
+        return useWebServer;
+    }
+
+    public void setUseWebServer(boolean useWebServer) {
+        this.useWebServer = useWebServer;
     }
 }

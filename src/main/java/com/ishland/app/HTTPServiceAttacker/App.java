@@ -25,7 +25,8 @@ public class App {
             logger.error("Cannot shutdown JVM normally, the JVM is shutting down forcibly.");
             Runtime.getRuntime().halt(0);
         }));
-        WebServer.run();
+        if (Attack.config.isUseWebServer())
+            WebServer.run();
         try {
             Attack.startAttack();
         } catch (IllegalAccessException e) {
@@ -36,7 +37,8 @@ public class App {
 
     public static void shutdown(boolean isInShutdownHook) {
         Attack.stopAttack();
-        WebServer.stop();
+        if (Attack.config.isUseWebServer())
+            WebServer.stop();
         if (!isInShutdownHook)
             System.exit(0);
     }

@@ -1,4 +1,6 @@
 showExceptions: false
+usePlaceholders: true
+useWebServer: true
 target:
   - addr: https://csdn.net/
     threads: 1
