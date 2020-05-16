@@ -3,34 +3,36 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="css/style.css">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
+    <link href="css/style.css" rel="stylesheet">
     <title>Status</title>
 </head>
 
 <body>
-    <div class="head">
-        <p class="title">Web Status</p>
-        <a href="https://space.bilibili.com/26147911" class="subtitle">Powered by ishland</a>
-        <p id="status"></p>
-    </div>
-    <div class="body">
-        <div id="gauge-1" class="gauge" style="margin: 0px;float: left;width: 25%;"></div>
-        <div id="gauge-2" class="gauge" style="margin: 0px;float: left;width: 25%;"></div>
-        <div id="creation_speed" class="gauge" style="margin: 0px;float: right;width: 25%;"></div>
-        <div id="gauge-3" class="gauge" style="margin: 0px;float: right;width: 25%;"></div>
-        <div id="line-1" class="line"></div>
-        <div id="line-2" class="line"></div>
-    </div>
-    <script>
+<div class="head">
+    <p class="title">Web Status</p>
+    <a class="subtitle" href="https://space.bilibili.com/26147911">Powered by ishland</a>
+    <p id="status"></p>
+</div>
+<div class="body">
+    <div class="gauge" id="gauge-1" style="margin: 0px;float: left;width: 25%;"></div>
+    <div class="gauge" id="gauge-2" style="margin: 0px;float: left;width: 25%;"></div>
+    <div class="gauge" id="creation_speed" style="margin: 0px;float: right;width: 25%;"></div>
+    <div class="gauge" id="gauge-3" style="margin: 0px;float: right;width: 25%;"></div>
+    <div class="line" id="line-1"></div>
+    <div class="line" id="line-2"></div>
+</div>
+<script>
         console.log((window.location.protocol == "https:" ? "wss" : "ws") + "://" + window.location.hostname + (!window
             .location.port ? "" : (":" + window.location.port)) + "/ws");
-    </script>
-    <script src="js/echarts.min.js"></script>
-    <script src="js/highcharts.min.js"></script>
-    <script src="js/highcharts-custom.min.js"></script>
-    <script src="js/main.js"></script>
+
+
+</script>
+<script src="js/echarts.min.js"></script>
+<script src="js/highcharts.min.js"></script>
+<script src="js/highcharts-custom.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 
 </html>

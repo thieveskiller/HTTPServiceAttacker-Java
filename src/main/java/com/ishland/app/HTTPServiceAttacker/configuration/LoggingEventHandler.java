@@ -8,9 +8,9 @@ public class LoggingEventHandler extends Filter<ILoggingEvent> {
 
     @Override
     public FilterReply decide(ILoggingEvent event) {
-	if (event.getLoggerName().contains("AsyncRetryExec"))
-	    return FilterReply.DENY;
-	return FilterReply.ACCEPT;
+        if (event.getLoggerName().contains("AsyncRetryExec"))
+            return FilterReply.DENY;
+        return FilterReply.ACCEPT;
     }
 
 }

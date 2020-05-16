@@ -62,11 +62,11 @@ ws.addEventListener('message', function (event) {
             type: 'gauge',
             max: data.maxAllowedConnections.toFixed(0),
             detail: {
-                formatter: '{value}/s'
+                formatter: '{value}'
             },
             data: [{
                 value: data.createdConnections.toFixed(0),
-                name: '连接创建'
+                name: '请求队列长度'
             }]
         }]
     };

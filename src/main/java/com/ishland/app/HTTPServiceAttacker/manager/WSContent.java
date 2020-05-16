@@ -3,14 +3,15 @@ package com.ishland.app.HTTPServiceAttacker.manager;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class WSContent {
-    public Map<Integer, Long> success = new HashMap<>();
+    public final Map<Integer, Long> success = new HashMap<>();
     public Long successcount = 0L;
-    public Map<Integer, Long> failure = new HashMap<>();
+    public final Map<Integer, Long> failure = new HashMap<>();
     public Long failurecount = 0L;
-    public Map<String, Long> errors = new HashMap<>();
+    public final Map<String, Long> errors = new HashMap<>();
     public Long errored = 0L;
-    public Map<String, Long> responses = new HashMap<>();
+    public final Map<String, Long> responses = new HashMap<>();
     public Double vaildRPS = 0.0;
     public Double totalRPS = 0.0;
     public Double maxVaildRPS = 0.0;
